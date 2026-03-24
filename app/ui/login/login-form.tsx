@@ -1,6 +1,5 @@
 'use client';
 
-import { lusitana } from '@/app/ui/fonts';
 import {
   AtSymbolIcon,
   KeyIcon,
@@ -19,58 +18,59 @@ export default function LoginForm() {
   const [errorMessage, formAction] = useFormState(authenticate, undefined);
 
   return (
-    <form action={formAction} className="space-y-3">
-      <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
-        <h1 className={`${lusitana.className} mb-3 text-2xl`}>
-          Please log in to continue.
-        </h1>
+    <form action={formAction} className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold text-slate-900">Welcome back</h2>
+        <p className="mt-1 text-sm text-slate-500">Sign in to your account</p>
+      </div>
 
-        <div className="w-full">
-          {/* Email */}
-          <div>
-            <label className="mb-3 mt-5 block text-xs font-medium text-gray-900">
-              Email
-            </label>
-            <div className="relative">
-              <input
-                name="email"
-                type="email"
-                required
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm"
-              />
-              <AtSymbolIcon className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-            </div>
-          </div>
-
-          {/* Password */}
-          <div className="mt-4">
-            <label className="mb-3 mt-5 block text-xs font-medium text-gray-900">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                name="password"
-                type="password"
-                minLength={6}
-                required
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm"
-              />
-              <KeyIcon className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-            </div>
+      <div className="space-y-4">
+        {/* Email */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Email
+          </label>
+          <div className="relative">
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="you@example.com"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+            />
+            <AtSymbolIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           </div>
         </div>
 
-        <input type="hidden" name="redirectTo" value={callbackUrl} />
-
-        <SubmitButton />
-
-        {errorMessage && (
-          <div className="flex items-center gap-1 text-red-500">
-            <ExclamationCircleIcon className="h-5 w-5" />
-            <p className="text-sm">{errorMessage}</p>
+        {/* Password */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Password
+          </label>
+          <div className="relative">
+            <input
+              name="password"
+              type="password"
+              minLength={6}
+              required
+              placeholder="••••••••"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+            />
+            <KeyIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           </div>
-        )}
+        </div>
       </div>
+
+      <input type="hidden" name="redirectTo" value={callbackUrl} />
+
+      <SubmitButton />
+
+      {errorMessage && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-red-600">
+          <ExclamationCircleIcon className="h-5 w-5 flex-shrink-0" />
+          <p className="text-sm font-medium">{errorMessage}</p>
+        </div>
+      )}
     </form>
   );
 }
@@ -79,9 +79,9 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button className="mt-4 w-full" disabled={pending}>
-      {pending ? 'Logging in…' : 'Log in'}
-      <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
+    <Button className="w-full justify-center" disabled={pending}>
+      {pending ? 'Signing in…' : 'Sign in'}
+      <ArrowRightIcon className="ml-2 h-5 w-5" />
     </Button>
   );
 }

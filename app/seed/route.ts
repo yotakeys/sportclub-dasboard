@@ -72,14 +72,14 @@ async function seedInvoices() {
   await sql`
     CREATE TABLE IF NOT EXISTS invoices (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-      user_id UUID NOT NULL,
+      player_id UUID NOT NULL,
       amount NUMERIC(10, 2) NOT NULL,
       month INT NOT NULL,
       year INT NOT NULL, 
       status VARCHAR(50) NOT NULL,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE
     );
   `;
 }

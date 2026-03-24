@@ -1,3 +1,10 @@
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+};
+
 export type GroupPlayer = {
   id: string;
   groupId: string;
@@ -35,11 +42,11 @@ export type GroupFormValues = {
   name: string;
 };
 
-export type InvoiceStatus = "paid" | "pending" | "overdue";
+export type InvoiceStatus = "paid";
 
 export type Invoice = {
   id: string;
-  user_id: string;
+  player_id: string;
   amount: number;
   month: number;
   year: number;
@@ -48,31 +55,6 @@ export type Invoice = {
   updated_at: string;
 };
 
-export type CreateInvoiceInput = {
-  user_id: string;
-  amount: number;
-  month: number;
-  year: number;
-  status: InvoiceStatus;
-};
-
-export type UpdateInvoiceInput = {
-  id: string;
-  user_id: string;
-  amount: number;
-  month: number;
-  year: number;
-  status: InvoiceStatus;
-};
-
-export type InvoiceFormValues = {
-  id?: string;
-  user_id: string;
-  amount: number;
-  month: number;
-  year: number;
-  status: InvoiceStatus;
-};
 
 export type Player = {
   id: string;   // UUID

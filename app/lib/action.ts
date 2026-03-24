@@ -3,8 +3,274 @@
 import postgres from 'postgres';
 import { AuthError } from 'next-auth';
 import { signIn } from '@/auth';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { z } from 'zod';
  
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+
+// Group Schema
+const GroupSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, 'Name is required'),
+});
+
+const CreateGroup = GroupSchema.omit({ id: true });
+const UpdateGroup = GroupSchema;
+
+export type GroupState = {
+  errors?: {
+    name?: string[];
+  };
+  message?: string | null;
+};
+
+export async function createGroup(
+  prevState: GroupState,
+  formData: FormData,
+): Promise<GroupState> {
+  const validatedFields = CreateGroup.safeParse({
+    name: formData.get('name'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Group.',
+    };
+  }
+
+  const { name } = validatedFields.data;
+
+  try {
+    await sql`
+      INSERT INTO groups (name)
+      VALUES (${name})
+    `;
+  } catch (error) {
+    console.error('Database Error:', error);
+    return { message: 'Database Error: Failed to Create Group.' };
+  }
+
+  revalidatePath('/dashboard/groups');
+  redirect('/dashboard/groups');
+}
+
+export async function updateGroup(
+  id: string,
+  prevState: GroupState,
+  formData: FormData,
+): Promise<GroupState> {
+  const validatedFields = UpdateGroup.safeParse({
+    id: id,
+    name: formData.get('name'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Update Group.',
+    };
+  }
+
+  const { name } = validatedFields.data;
+
+  try {
+    await sql`
+      UPDATE groups
+      SET name = ${name}
+      WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error('Database Error:', error);
+    return { message: 'Database Error: Failed to Update Group.' };
+  }
+
+  revalidatePath('/dashboard/groups');
+  redirect('/dashboard/groups');
+}
+
+export async function deleteGroup(id: string): Promise<void> {
+  try {
+    await sql`DELETE FROM groups WHERE id = ${id}`;
+    revalidatePath('/dashboard/groups');
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Database Error: Failed to Delete Group.');
+  }
+}
+
+// ============ PLAYERS ============
+
+const PlayerSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, 'Name is required'),
+  groupIds: z.array(z.string().uuid()).optional(),
+});
+
+const CreatePlayer = PlayerSchema.omit({ id: true });
+const UpdatePlayer = PlayerSchema;
+
+export type PlayerState = {
+  errors?: {
+    name?: string[];
+    groupIds?: string[];
+  };
+  message?: string | null;
+};
+
+export async function createPlayer(
+  prevState: PlayerState,
+  formData: FormData,
+): Promise<PlayerState> {
+  const groupIds = formData.getAll('groupIds') as string[];
+  
+  const validatedFields = CreatePlayer.safeParse({
+    name: formData.get('name'),
+    groupIds: groupIds.length > 0 ? groupIds : undefined,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Player.',
+    };
+  }
+
+  const { name, groupIds: validGroupIds } = validatedFields.data;
+
+  try {
+    // Insert player and get the new ID
+    const result = await sql`
+      INSERT INTO players (name)
+      VALUES (${name})
+      RETURNING id
+    `;
+    
+    const playerId = result[0].id;
+
+    // Insert group associations
+    if (validGroupIds && validGroupIds.length > 0) {
+      for (const groupId of validGroupIds) {
+        await sql`
+          INSERT INTO group_players (group_id, player_id)
+          VALUES (${groupId}, ${playerId})
+        `;
+      }
+    }
+  } catch (error) {
+    console.error('Database Error:', error);
+    return { message: 'Database Error: Failed to Create Player.' };
+  }
+
+  revalidatePath('/dashboard/players');
+  redirect('/dashboard/players');
+}
+
+export async function updatePlayer(
+  id: string,
+  prevState: PlayerState,
+  formData: FormData,
+): Promise<PlayerState> {
+  const groupIds = formData.getAll('groupIds') as string[];
+
+  const validatedFields = UpdatePlayer.safeParse({
+    id: id,
+    name: formData.get('name'),
+    groupIds: groupIds.length > 0 ? groupIds : undefined,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Update Player.',
+    };
+  }
+
+  const { name, groupIds: validGroupIds } = validatedFields.data;
+
+  try {
+    // Update player name
+    await sql`
+      UPDATE players
+      SET name = ${name}
+      WHERE id = ${id}
+    `;
+
+    // Delete existing group associations
+    await sql`
+      DELETE FROM group_players
+      WHERE player_id = ${id}
+    `;
+
+    // Insert new group associations
+    if (validGroupIds && validGroupIds.length > 0) {
+      for (const groupId of validGroupIds) {
+        await sql`
+          INSERT INTO group_players (group_id, player_id)
+          VALUES (${groupId}, ${id})
+        `;
+      }
+    }
+  } catch (error) {
+    console.error('Database Error:', error);
+    return { message: 'Database Error: Failed to Update Player.' };
+  }
+
+  revalidatePath('/dashboard/players');
+  redirect('/dashboard/players');
+}
+
+export async function deletePlayer(id: string): Promise<void> {
+  try {
+    // Delete group associations first
+    await sql`DELETE FROM group_players WHERE player_id = ${id}`;
+    // Delete player
+    await sql`DELETE FROM players WHERE id = ${id}`;
+    revalidatePath('/dashboard/players');
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Database Error: Failed to Delete Player.');
+  }
+}
+
+// ============ INVOICES ============
+
+export async function toggleInvoice(
+  playerId: string,
+  month: number,
+  year: number,
+  currentStatus: 'paid' | null,
+  invoiceId: string | null,
+  amount: number = 0,
+): Promise<void> {
+  try {
+    if (currentStatus === 'paid' && invoiceId && amount === 0) {
+      // Delete the invoice (mark as unpaid)
+      await sql`
+        DELETE FROM invoices
+        WHERE id = ${invoiceId}
+      `;
+    } else if (currentStatus === 'paid' && invoiceId) {
+      // Update existing invoice amount
+      await sql`
+        UPDATE invoices
+        SET amount = ${amount}, updated_at = NOW()
+        WHERE id = ${invoiceId}
+      `;
+    } else {
+      // Create new invoice (mark as paid)
+      await sql`
+        INSERT INTO invoices (player_id, amount, month, year, status)
+        VALUES (${playerId}, ${amount}, ${month}, ${year}, 'paid')
+      `;
+    }
+    revalidatePath('/dashboard/invoices');
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Database Error: Failed to toggle invoice.');
+  }
+}
 
 
 export async function authenticate(

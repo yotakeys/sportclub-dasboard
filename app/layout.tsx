@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     default: 'Tri Dharma Dashboard',
   },
   description: 'Tri Dharma Club Management',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

@@ -16,49 +16,46 @@ export default function Pagination({ totalPages }: { totalPages: number }) {
     params.set('page', pageNumber.toString());
     return `${pathname}?${params.toString()}`;
   };
-  // NOTE: Uncomment this code in Chapter 11
 
   const allPages = generatePagination(currentPage, totalPages);
 
+  if (totalPages <= 1) return null;
+
   return (
-    <>
-      {/*  NOTE: Uncomment this code in Chapter 11 */}
+    <div className="inline-flex items-center gap-2">
+      <PaginationArrow
+        direction="left"
+        href={createPageURL(currentPage - 1)}
+        isDisabled={currentPage <= 1}
+      />
 
-      <div className="inline-flex">
-        <PaginationArrow
-          direction="left"
-          href={createPageURL(currentPage - 1)}
-          isDisabled={currentPage <= 1}
-        />
+      <div className="flex gap-1">
+        {allPages.map((page, index) => {
+          let position: 'first' | 'last' | 'single' | 'middle' | undefined;
 
-        <div className="flex -space-x-px">
-          {allPages.map((page, index) => {
-            let position: 'first' | 'last' | 'single' | 'middle' | undefined;
+          if (index === 0) position = 'first';
+          if (index === allPages.length - 1) position = 'last';
+          if (allPages.length === 1) position = 'single';
+          if (page === '...') position = 'middle';
 
-            if (index === 0) position = 'first';
-            if (index === allPages.length - 1) position = 'last';
-            if (allPages.length === 1) position = 'single';
-            if (page === '...') position = 'middle';
-
-            return (
-              <PaginationNumber
-                key={`${page}-${index}`}
-                href={createPageURL(page)}
-                page={page}
-                position={position}
-                isActive={currentPage === page}
-              />
-            );
-          })}
-        </div>
-
-        <PaginationArrow
-          direction="right"
-          href={createPageURL(currentPage + 1)}
-          isDisabled={currentPage >= totalPages}
-        />
+          return (
+            <PaginationNumber
+              key={`${page}-${index}`}
+              href={createPageURL(page)}
+              page={page}
+              position={position}
+              isActive={currentPage === page}
+            />
+          );
+        })}
       </div>
-    </>
+
+      <PaginationArrow
+        direction="right"
+        href={createPageURL(currentPage + 1)}
+        isDisabled={currentPage >= totalPages}
+      />
+    </div>
   );
 }
 
@@ -74,13 +71,11 @@ function PaginationNumber({
   isActive: boolean;
 }) {
   const className = clsx(
-    'flex h-10 w-10 items-center justify-center text-sm border',
+    'flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors',
     {
-      'rounded-l-md': position === 'first' || position === 'single',
-      'rounded-r-md': position === 'last' || position === 'single',
-      'z-10 bg-blue-600 border-blue-600 text-white': isActive,
-      'hover:bg-gray-100': !isActive && position !== 'middle',
-      'text-gray-300': position === 'middle',
+      'bg-slate-900 text-white': isActive,
+      'text-slate-600 hover:bg-slate-100': !isActive && position !== 'middle',
+      'text-slate-400 cursor-default': position === 'middle',
     },
   );
 
@@ -103,20 +98,18 @@ function PaginationArrow({
   isDisabled?: boolean;
 }) {
   const className = clsx(
-    'flex h-10 w-10 items-center justify-center rounded-md border',
+    'flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 transition-colors',
     {
-      'pointer-events-none text-gray-300': isDisabled,
-      'hover:bg-gray-100': !isDisabled,
-      'mr-2 md:mr-4': direction === 'left',
-      'ml-2 md:ml-4': direction === 'right',
+      'pointer-events-none text-slate-300 bg-slate-50': isDisabled,
+      'text-slate-600 hover:bg-slate-100': !isDisabled,
     },
   );
 
   const icon =
     direction === 'left' ? (
-      <ArrowLeftIcon className="w-4" />
+      <ArrowLeftIcon className="h-4 w-4" />
     ) : (
-      <ArrowRightIcon className="w-4" />
+      <ArrowRightIcon className="h-4 w-4" />
     );
 
   return isDisabled ? (
