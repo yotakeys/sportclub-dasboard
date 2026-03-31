@@ -3,12 +3,16 @@ export type User = {
   name: string;
   email: string;
   password: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type GroupPlayer = {
   id: string;
   groupId: string;
   playerId: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type CreateGroupPlayerInput = {
@@ -26,6 +30,8 @@ export type UpdateGroupPlayerInput = {
 export type Group = {
   id: string;   // UUID
   name: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type CreateGroupInput = {
@@ -55,22 +61,49 @@ export type Invoice = {
   updated_at: string;
 };
 
+export type Presence = {
+  id: string;
+  player_id: string;
+  month: number;
+  year: number;
+  count: number;
+  created_at: string;
+  updated_at: string;
+};
 
 export type Player = {
-  id: string;   // UUID
+  id: string;
   name: string;
+  birthdate?: string;
+  phone?: string;
+  address?: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type CreatePlayerInput = {
   name: string;
+  birthdate?: string;
+  phone?: string;
+  address?: string;
+  is_active?: boolean;
 };
 
 export type UpdatePlayerInput = {
   id: string;
   name: string;
+  birthdate?: string;
+  phone?: string;
+  address?: string;
+  is_active?: boolean;
 };
 
 export type PlayerFormValues = {
   id?: string;
   name: string;
+  birthdate?: string;
+  phone?: string;
+  address?: string;
+  is_active?: boolean;
 };

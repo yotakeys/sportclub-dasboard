@@ -40,6 +40,96 @@ export function CreatePlayerForm({ groups }: { groups: Group[] }) {
             </div>
           </div>
 
+          {/* Birthdate */}
+          <div>
+            <label
+              htmlFor="birthdate"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Birthdate
+            </label>
+            <input
+              id="birthdate"
+              name="birthdate"
+              type="date"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="birthdate-error"
+            />
+            <div id="birthdate-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.birthdate &&
+                state.errors.birthdate.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label
+              htmlFor="phone"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Phone Number
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              placeholder="Enter phone number"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="phone-error"
+            />
+            <div id="phone-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.phone &&
+                state.errors.phone.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Address */}
+          <div>
+            <label
+              htmlFor="address"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Address
+            </label>
+            <textarea
+              id="address"
+              name="address"
+              rows={3}
+              placeholder="Enter address"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="address-error"
+            />
+            <div id="address-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.address &&
+                state.errors.address.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Active Status */}
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_active"
+                defaultChecked={true}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900/10"
+              />
+              <span className="text-sm font-medium text-slate-700">Active Player</span>
+            </label>
+          </div>
+
           {/* Groups */}
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -141,6 +231,99 @@ export function EditPlayerForm({
                   </p>
                 ))}
             </div>
+          </div>
+
+          {/* Birthdate */}
+          <div>
+            <label
+              htmlFor="birthdate"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Birthdate
+            </label>
+            <input
+              id="birthdate"
+              name="birthdate"
+              type="date"
+              defaultValue={player.birthdate || ''}
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="birthdate-error"
+            />
+            <div id="birthdate-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.birthdate &&
+                state.errors.birthdate.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label
+              htmlFor="phone"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Phone Number
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              defaultValue={player.phone || ''}
+              placeholder="Enter phone number"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="phone-error"
+            />
+            <div id="phone-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.phone &&
+                state.errors.phone.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Address */}
+          <div>
+            <label
+              htmlFor="address"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Address
+            </label>
+            <textarea
+              id="address"
+              name="address"
+              rows={3}
+              defaultValue={player.address || ''}
+              placeholder="Enter address"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="address-error"
+            />
+            <div id="address-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.address &&
+                state.errors.address.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Active Status */}
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_active"
+                defaultChecked={player.is_active}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900/10"
+              />
+              <span className="text-sm font-medium text-slate-700">Active Player</span>
+            </label>
           </div>
 
           {/* Groups */}

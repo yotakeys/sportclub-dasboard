@@ -13,6 +13,9 @@ export default function PlayersTable({ players }: { players: PlayerWithGroups[] 
               Name
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+              Status
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
               Groups
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">
@@ -23,7 +26,7 @@ export default function PlayersTable({ players }: { players: PlayerWithGroups[] 
         <tbody className="divide-y divide-slate-100">
           {players.length === 0 ? (
             <tr>
-              <td colSpan={3} className="px-6 py-8 text-center text-sm text-slate-500">
+              <td colSpan={4} className="px-6 py-8 text-center text-sm text-slate-500">
                 No players found.
               </td>
             </tr>
@@ -32,6 +35,17 @@ export default function PlayersTable({ players }: { players: PlayerWithGroups[] 
               <tr key={player.id} className="hover:bg-slate-50">
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">
                   {player.name}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                  {player.is_active ? (
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                      Inactive
+                    </span>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-sm text-slate-500">
                   <div className="flex flex-wrap gap-1">

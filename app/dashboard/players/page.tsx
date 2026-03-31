@@ -5,11 +5,14 @@ import Search from '@/app/ui/search';
 import Pagination from '@/app/ui/pagination';
 import PlayersTable from '@/app/ui/players/table';
 import GroupFilter from '@/app/ui/players/group-filter';
+import StatusFilter from '@/app/ui/players/status-filter';
 import {
   fetchFilteredPlayers,
   fetchPlayersPages,
   fetchAllGroups,
 } from '@/app/lib/data';
+
+export const dynamic = 'force-dynamic';
 
 export default async function PlayersPage({
   searchParams,
@@ -18,15 +21,17 @@ export default async function PlayersPage({
     query?: string;
     page?: string;
     groupId?: string;
+    status?: string;
   };
 }) {
   const query = searchParams?.query || '';
   const currentPage = Number(searchParams?.page) || 1;
   const groupId = searchParams?.groupId || undefined;
+  const status = searchParams?.status || undefined;
 
   const [players, totalPages, groups] = await Promise.all([
-    fetchFilteredPlayers(query, currentPage, groupId),
-    fetchPlayersPages(query, groupId),
+    fetchFilteredPlayers(query, currentPage, groupId, status),
+    fetchPlayersPages(query, groupId, status),
     fetchAllGroups(),
   ]);
 
@@ -50,6 +55,11 @@ export default async function PlayersPage({
         <div className="w-full sm:w-48">
           <Suspense fallback={null}>
             <GroupFilter groups={groups} />
+          </Suspense>
+        </div>
+        <div className="w-full sm:w-36">
+          <Suspense fallback={null}>
+            <StatusFilter />
           </Suspense>
         </div>
       </div>

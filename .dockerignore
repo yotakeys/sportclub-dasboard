@@ -1,0 +1,37 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Build outputs
+.next
+out
+build
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+docker/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment (don't include real secrets)
+.env
+.env.local
+.env.production.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+README.md
+*.md
+pnpm-lock.yaml

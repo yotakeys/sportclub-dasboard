@@ -2,7 +2,9 @@ import bcrypt from 'bcrypt';
 import postgres from 'postgres';
 import { users } from '../lib/account';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const sql = postgres(process.env.POSTGRES_URL!, {
+  ssl: process.env.POSTGRES_SSL === 'true' ? 'require' : false,
+});
 
 async function seedUsers() {
   await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
@@ -11,7 +13,9 @@ async function seedUsers() {
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
@@ -35,7 +39,9 @@ async function seedGroups() {
   await sql`
     CREATE TABLE IF NOT EXISTS groups (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-      name VARCHAR(255) NOT NULL
+      name VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
     );
   `;
 }
@@ -47,7 +53,13 @@ async function seedPlayers() {
   await sql`
     CREATE TABLE IF NOT EXISTS players (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-      name VARCHAR(255) NOT NULL
+      name VARCHAR(255) NOT NULL,
+      birthdate DATE,
+      phone VARCHAR(50),
+      address TEXT,
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
     );
   `;
 }
@@ -60,6 +72,8 @@ async function seedGroupPlayers() {
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       group_id UUID NOT NULL,
       player_id UUID NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
       FOREIGN KEY (group_id) REFERENCES groups (id) ON DELETE CASCADE,
       FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE
     );
@@ -84,6 +98,24 @@ async function seedInvoices() {
   `;
 }
 
+async function seedPresences() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS presences (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      player_id UUID NOT NULL,
+      month INT NOT NULL,
+      year INT NOT NULL,
+      count INT NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE,
+      UNIQUE (player_id, month, year)
+    );
+  `;
+}
+
 export async function GET() {
   try {
     await sql.begin(async () => [
@@ -92,6 +124,7 @@ export async function GET() {
       await seedPlayers(),
       await seedGroupPlayers(),
       await seedInvoices(),
+      await seedPresences(),
     ]);
 
     return Response.json({ message: 'Database seeded successfully' });

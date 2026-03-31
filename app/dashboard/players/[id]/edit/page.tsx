@@ -4,6 +4,8 @@ import { EditPlayerForm } from '@/app/ui/players/form';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditPlayerPage({
   params,
 }: {

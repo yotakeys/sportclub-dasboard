@@ -7,7 +7,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
  
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const sql = postgres(process.env.POSTGRES_URL!, {
+  ssl: process.env.POSTGRES_SSL === 'true' ? 'require' : false,
+});
 
 // Group Schema
 const GroupSchema = z.object({
@@ -106,6 +108,10 @@ const PlayerSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, 'Name is required'),
   groupIds: z.array(z.string().uuid()).optional(),
+  birthdate: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  is_active: z.boolean().optional(),
 });
 
 const CreatePlayer = PlayerSchema.omit({ id: true });
@@ -115,6 +121,9 @@ export type PlayerState = {
   errors?: {
     name?: string[];
     groupIds?: string[];
+    birthdate?: string[];
+    phone?: string[];
+    address?: string[];
   };
   message?: string | null;
 };
@@ -124,10 +133,18 @@ export async function createPlayer(
   formData: FormData,
 ): Promise<PlayerState> {
   const groupIds = formData.getAll('groupIds') as string[];
+  const birthdate = formData.get('birthdate') as string;
+  const phone = formData.get('phone') as string;
+  const address = formData.get('address') as string;
+  const isActive = formData.get('is_active') === 'on';
   
   const validatedFields = CreatePlayer.safeParse({
     name: formData.get('name'),
     groupIds: groupIds.length > 0 ? groupIds : undefined,
+    birthdate: birthdate || undefined,
+    phone: phone || undefined,
+    address: address || undefined,
+    is_active: isActive,
   });
 
   if (!validatedFields.success) {
@@ -137,13 +154,13 @@ export async function createPlayer(
     };
   }
 
-  const { name, groupIds: validGroupIds } = validatedFields.data;
+  const { name, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
 
   try {
     // Insert player and get the new ID
     const result = await sql`
-      INSERT INTO players (name)
-      VALUES (${name})
+      INSERT INTO players (name, birthdate, phone, address, is_active)
+      VALUES (${name}, ${bdate || null}, ${ph || null}, ${addr || null}, ${is_active ?? true})
       RETURNING id
     `;
     
@@ -173,11 +190,19 @@ export async function updatePlayer(
   formData: FormData,
 ): Promise<PlayerState> {
   const groupIds = formData.getAll('groupIds') as string[];
+  const birthdate = formData.get('birthdate') as string;
+  const phone = formData.get('phone') as string;
+  const address = formData.get('address') as string;
+  const isActive = formData.get('is_active') === 'on';
 
   const validatedFields = UpdatePlayer.safeParse({
     id: id,
     name: formData.get('name'),
     groupIds: groupIds.length > 0 ? groupIds : undefined,
+    birthdate: birthdate || undefined,
+    phone: phone || undefined,
+    address: address || undefined,
+    is_active: isActive,
   });
 
   if (!validatedFields.success) {
@@ -187,13 +212,18 @@ export async function updatePlayer(
     };
   }
 
-  const { name, groupIds: validGroupIds } = validatedFields.data;
+  const { name, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
 
   try {
-    // Update player name
+    // Update player
     await sql`
       UPDATE players
-      SET name = ${name}
+      SET name = ${name}, 
+          birthdate = ${bdate || null},
+          phone = ${ph || null},
+          address = ${addr || null},
+          is_active = ${is_active ?? true},
+          updated_at = NOW()
       WHERE id = ${id}
     `;
 
@@ -269,6 +299,37 @@ export async function toggleInvoice(
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Database Error: Failed to toggle invoice.');
+  }
+}
+
+// ============ PRESENCES ============
+
+export async function updatePresence(
+  playerId: string,
+  month: number,
+  year: number,
+  count: number,
+  presenceId: string | null,
+): Promise<void> {
+  try {
+    if (presenceId) {
+      // Update existing presence
+      await sql`
+        UPDATE presences
+        SET count = ${count}, updated_at = NOW()
+        WHERE id = ${presenceId}
+      `;
+    } else {
+      // Create new presence record
+      await sql`
+        INSERT INTO presences (player_id, month, year, count)
+        VALUES (${playerId}, ${month}, ${year}, ${count})
+      `;
+    }
+    revalidatePath('/dashboard/presences');
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Database Error: Failed to update presence.');
   }
 }
 

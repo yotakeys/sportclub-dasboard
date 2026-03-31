@@ -6,6 +6,8 @@ import Pagination from '@/app/ui/pagination';
 import GroupsTable from '@/app/ui/groups/table';
 import { fetchFilteredGroups, fetchGroupsPages } from '@/app/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export default async function GroupsPage({
   searchParams,
 }: {

@@ -3,6 +3,8 @@ import { fetchAllGroups } from '@/app/lib/data';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CreatePlayerPage() {
   const groups = await fetchAllGroups();
 

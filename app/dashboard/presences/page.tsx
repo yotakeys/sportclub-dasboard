@@ -1,20 +1,20 @@
 import { Suspense } from 'react';
 import Search from '@/app/ui/search';
 import Pagination from '@/app/ui/pagination';
-import InvoicesTable from '@/app/ui/invoices/table';
-import YearFilter from '@/app/ui/invoices/year-filter';
-import GroupFilter from '@/app/ui/invoices/group-filter';
-import StatusFilter from '@/app/ui/invoices/status-filter';
+import PresencesTable from '@/app/ui/presences/table';
+import YearFilter from '@/app/ui/presences/year-filter';
+import GroupFilter from '@/app/ui/presences/group-filter';
+import StatusFilter from '@/app/ui/presences/status-filter';
 import {
-  fetchPlayersWithInvoices,
-  fetchInvoicePlayersPages,
+  fetchPlayersWithPresences,
+  fetchPresencePlayersPages,
   fetchAllGroups,
-  fetchAvailableYears,
+  fetchPresenceAvailableYears,
 } from '@/app/lib/data';
 
 export const dynamic = 'force-dynamic';
 
-export default async function InvoicesPage({
+export default async function PresencesPage({
   searchParams,
 }: {
   searchParams?: {
@@ -33,19 +33,19 @@ export default async function InvoicesPage({
   const status = searchParams?.status || undefined;
 
   const [players, totalPages, groups, years] = await Promise.all([
-    fetchPlayersWithInvoices(query, currentPage, year, groupId, status),
-    fetchInvoicePlayersPages(query, groupId, status),
+    fetchPlayersWithPresences(query, currentPage, year, groupId, status),
+    fetchPresencePlayersPages(query, groupId, status),
     fetchAllGroups(),
-    fetchAvailableYears(),
+    fetchPresenceAvailableYears(),
   ]);
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Invoices</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Presences</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Track monthly payments for each player
+            Track monthly attendance for each player
           </p>
         </div>
       </div>
@@ -74,29 +74,13 @@ export default async function InvoicesPage({
       </div>
 
       <div className="mt-6">
-        <InvoicesTable players={players} year={year} />
+        <PresencesTable players={players} year={year} />
       </div>
 
       <div className="mt-6 flex justify-center">
         <Suspense fallback={null}>
           <Pagination totalPages={totalPages} />
         </Suspense>
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 flex items-center justify-center gap-6 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded border border-emerald-200 bg-emerald-50">
-            <svg className="h-3 w-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <span>Paid</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded border border-slate-200 bg-slate-50" />
-          <span>Unpaid</span>
-        </div>
       </div>
     </div>
   );
