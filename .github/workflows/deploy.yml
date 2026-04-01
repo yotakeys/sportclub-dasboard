@@ -41,34 +41,35 @@ jobs:
           cat > deploy.sh << 'EOF'
           #!/bin/bash
           set -e
-          
+
           echo "Starting deployment..."
-          
+
           # Navigate to deployment directory
           cd $VPS_DEPLOY_PATH || { echo "❌ Cannot access $VPS_DEPLOY_PATH"; exit 1; }
-          
+
           # Initialize git repository if not exists
           if [ ! -d ".git" ]; then
             echo "📦 Initializing git repository..."
+            cd $VPS_DEPLOY_PATH
             git init
             git remote add origin https://github.com/yotakeys/sportclub-dasboard.git
           fi
-          
+
           # Pull latest changes from GitHub
           echo "📥 Pulling latest code from GitHub..."
           git pull origin main || { echo "❌ Git pull failed"; exit 1; }
-          
+
           # Build and deploy with docker-compose
           echo "🐳 Deploying with Docker Compose..."
           sudo docker-compose down || true
           sudo docker-compose pull
           sudo docker-compose up -d --build
-          
+
           # Verify deployment
           echo "✅ Waiting for containers to start..."
           sleep 5
           sudo docker-compose ps
-          
+
           echo "✅ Deployment successful!"
           EOF
 
