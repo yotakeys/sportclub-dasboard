@@ -5,7 +5,7 @@ This repository uses GitHub Actions to automatically deploy the application to y
 ## Prerequisites
 
 1. **Git repository initialized** on your VPS at `/home/app`
-2. **Docker and Docker Compose** installed on the VPS
+2. **Docker and Docker Compose** installed on the VPS (see [DOCKER_INSTALLATION.md](DOCKER_INSTALLATION.md) if not installed)
 3. **GitHub repository access** with admin permissions to set secrets
 
 ## VPS Setup Instructions
