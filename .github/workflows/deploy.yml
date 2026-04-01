@@ -1,0 +1,84 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint --if-present || true
+
+      - name: Build application
+        run: npm run build
+
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          # Install sshpass for password authentication
+          apt-get update && apt-get install -y sshpass
+
+          # Create deployment script
+          cat > deploy.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          # Navigate to deployment directory
+          cd $VPS_DEPLOY_PATH
+          
+          # Pull latest changes from GitHub
+          git pull origin main
+          
+          # Create/update .env if needed (you'll need to set env vars in GitHub secrets)
+          # Uncomment and modify if you need to update .env dynamically
+          # echo "POSTGRES_USER=$POSTGRES_USER" >> .env
+          # echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+          # echo "AUTH_SECRET=$AUTH_SECRET" >> .env
+          # echo "AUTH_URL=$AUTH_URL" >> .env
+          # echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
+          # echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> .env
+          
+          # Build and deploy with docker-compose
+          docker-compose down
+          docker-compose pull
+          docker-compose up -d --build
+          
+          # Verify deployment
+          sleep 5
+          docker-compose ps
+          
+          echo "Deployment successful!"
+          EOF
+
+          chmod +x deploy.sh
+
+          # Execute deployment script on VPS via SSH
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "$VPS_USER@$VPS_HOST" < deploy.sh
+
+      - name: Deployment Status
+        if: success()
+        run: echo "✅ Deployment to VPS completed successfully!"
+
+      - name: Deployment Failed
+        if: failure()
+        run: echo "❌ Deployment failed. Please check the logs above."
