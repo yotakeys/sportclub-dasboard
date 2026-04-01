@@ -31,7 +31,6 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
-          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
           # Install sshpass for password authentication
@@ -42,15 +41,15 @@ jobs:
             "$VPS_USER@$VPS_HOST" << 'REMOTESCRIPT'
           #!/bin/bash
           set -e
-          
-          DEPLOY_PATH="/home/app"
-          
+
+          DEPLOY_PATH="/root/app/sportclub-dashboard"
+
           echo "🚀 Starting deployment to $DEPLOY_PATH..."
-          
+
           # Navigate to deployment directory
           cd "$DEPLOY_PATH" || { echo "❌ Cannot access $DEPLOY_PATH"; exit 1; }
           echo "✅ Changed to directory: $(pwd)"
-          
+
           # Initialize git repository if not exists
           if [ ! -d ".git" ]; then
             echo "📦 Initializing git repository..."
@@ -60,30 +59,30 @@ jobs:
           else
             echo "✅ Git repository already exists"
           fi
-          
+
           # Pull latest changes from GitHub
           echo "📥 Pulling latest code from GitHub..."
           git pull origin main || { echo "❌ Git pull failed"; exit 1; }
           echo "✅ Code pulled successfully"
-          
+
           # Build and deploy with docker-compose
           echo "🐳 Deploying with Docker Compose..."
           sudo docker-compose down || true
           echo "✅ Stopped old containers"
-          
+
           sudo docker-compose pull
           echo "✅ Pulled latest images"
-          
+
           sudo docker-compose up -d --build
           echo "✅ Started new containers"
-          
+
           # Verify deployment
           echo "⏳ Waiting for containers to start..."
           sleep 5
-          
+
           echo "📊 Container status:"
           sudo docker-compose ps
-          
+
           echo ""
           echo "✅ Deployment successful!"
           REMOTESCRIPT
