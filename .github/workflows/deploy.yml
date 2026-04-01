@@ -35,45 +35,48 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
         run: |
           # Install sshpass for password authentication
-          apt-get update && apt-get install -y sshpass
+          sudo apt-get update && sudo apt-get install -y sshpass
 
           # Create deployment script
           cat > deploy.sh << 'EOF'
           #!/bin/bash
           set -e
           
+          echo "Starting deployment..."
+          
           # Navigate to deployment directory
-          cd $VPS_DEPLOY_PATH
+          cd $VPS_DEPLOY_PATH || { echo "❌ Cannot access $VPS_DEPLOY_PATH"; exit 1; }
+          
+          # Initialize git repository if not exists
+          if [ ! -d ".git" ]; then
+            echo "📦 Initializing git repository..."
+            git init
+            git remote add origin https://github.com/yotakeys/sportclub-dasboard.git
+          fi
           
           # Pull latest changes from GitHub
-          git pull origin main
-          
-          # Create/update .env if needed (you'll need to set env vars in GitHub secrets)
-          # Uncomment and modify if you need to update .env dynamically
-          # echo "POSTGRES_USER=$POSTGRES_USER" >> .env
-          # echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
-          # echo "AUTH_SECRET=$AUTH_SECRET" >> .env
-          # echo "AUTH_URL=$AUTH_URL" >> .env
-          # echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
-          # echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> .env
+          echo "📥 Pulling latest code from GitHub..."
+          git pull origin main || { echo "❌ Git pull failed"; exit 1; }
           
           # Build and deploy with docker-compose
-          docker-compose down
-          docker-compose pull
-          docker-compose up -d --build
+          echo "🐳 Deploying with Docker Compose..."
+          sudo docker-compose down || true
+          sudo docker-compose pull
+          sudo docker-compose up -d --build
           
           # Verify deployment
+          echo "✅ Waiting for containers to start..."
           sleep 5
-          docker-compose ps
+          sudo docker-compose ps
           
-          echo "Deployment successful!"
+          echo "✅ Deployment successful!"
           EOF
 
           chmod +x deploy.sh
 
           # Execute deployment script on VPS via SSH
           sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            "$VPS_USER@$VPS_HOST" < deploy.sh
+            "$VPS_USER@$VPS_HOST" bash -s < deploy.sh
 
       - name: Deployment Status
         if: success()
