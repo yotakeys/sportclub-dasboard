@@ -42,7 +42,7 @@ jobs:
           #!/bin/bash
           set -e
 
-          DEPLOY_PATH="/app/sportclub-dashboard"
+          DEPLOY_PATH="app/sportclub-dasboard"
 
           echo "🚀 Starting deployment to $DEPLOY_PATH..."
 
