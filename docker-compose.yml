@@ -8,7 +8,7 @@ services:
     ports:
       - "10001:10001"
     environment:
-      - POSTGRES_URL=postgres://${POSTGRES_USER:-sportclub}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DATABASE:-sportclub}
+      - POSTGRES_URL=postgres://${POSTGRES_USER:-sportclub}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/${POSTGRES_DATABASE:-sportclub}
       - AUTH_SECRET=${AUTH_SECRET:?Auth secret required}
       - AUTH_URL=${AUTH_URL:-http://localhost:10001/api/auth}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@sportclub.com}

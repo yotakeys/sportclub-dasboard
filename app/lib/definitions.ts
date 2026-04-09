@@ -74,7 +74,10 @@ export type Presence = {
 export type Player = {
   id: string;
   name: string;
+  nik: string;
+  email: string;
   birthdate?: string;
+  birth_place: string;
   phone?: string;
   address?: string;
   is_active: boolean;
@@ -84,6 +87,9 @@ export type Player = {
 
 export type CreatePlayerInput = {
   name: string;
+  nik: string;
+  email: string;
+  birth_place: string;
   birthdate?: string;
   phone?: string;
   address?: string;
@@ -93,6 +99,9 @@ export type CreatePlayerInput = {
 export type UpdatePlayerInput = {
   id: string;
   name: string;
+  nik: string;
+  email: string;
+  birth_place: string;
   birthdate?: string;
   phone?: string;
   address?: string;
@@ -102,6 +111,9 @@ export type UpdatePlayerInput = {
 export type PlayerFormValues = {
   id?: string;
   name: string;
+  nik: string;
+  email: string;
+  birth_place: string;
   birthdate?: string;
   phone?: string;
   address?: string;

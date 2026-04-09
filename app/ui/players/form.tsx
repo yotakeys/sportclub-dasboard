@@ -40,6 +40,86 @@ export function CreatePlayerForm({ groups }: { groups: Group[] }) {
             </div>
           </div>
 
+          {/* NIK */}
+          <div>
+            <label
+              htmlFor="nik"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              NIK
+            </label>
+            <input
+              id="nik"
+              name="nik"
+              type="text"
+              placeholder="Enter NIK (16 characters)"
+              maxLength={36}
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="nik-error"
+            />
+            <div id="nik-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.nik &&
+                state.errors.nik.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Enter email address"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="email-error"
+            />
+            <div id="email-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.email &&
+                state.errors.email.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          
+          {/* Birth Place */}
+          <div>
+            <label
+              htmlFor="birth_place"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Birth Place
+            </label>
+            <input
+              id="birth_place"
+              name="birth_place"
+              type="text"
+              placeholder="Enter birth place"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="birth_place-error"
+            />
+            <div id="birth_place-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.birth_place &&
+                state.errors.birth_place.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
           {/* Birthdate */}
           <div>
             <label
@@ -226,6 +306,88 @@ export function EditPlayerForm({
             <div id="name-error" aria-live="polite" aria-atomic="true">
               {state.errors?.name &&
                 state.errors.name.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* NIK */}
+          <div>
+            <label
+              htmlFor="nik"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              NIK
+            </label>
+            <input
+              id="nik"
+              name="nik"
+              type="text"
+              defaultValue={player.nik}
+              placeholder="Enter NIK 16 characters)"
+              maxLength={36}
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="nik-error"
+            />
+            <div id="nik-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.nik &&
+                state.errors.nik.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              defaultValue={player.email}
+              placeholder="Enter email address"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="email-error"
+            />
+            <div id="email-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.email &&
+                state.errors.email.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
+
+          {/* Birth Place */}
+          <div>
+            <label
+              htmlFor="birth_place"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Birth Place
+            </label>
+            <input
+              id="birth_place"
+              name="birth_place"
+              type="text"
+              defaultValue={player.birth_place}
+              placeholder="Enter birth place"
+              className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              aria-describedby="birth_place-error"
+            />
+            <div id="birth_place-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.birth_place &&
+                state.errors.birth_place.map((error: string) => (
                   <p className="mt-2 text-sm text-red-500" key={error}>
                     {error}
                   </p>

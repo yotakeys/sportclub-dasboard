@@ -107,6 +107,9 @@ export async function deleteGroup(id: string): Promise<void> {
 const PlayerSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, 'Name is required'),
+  nik: z.string().length(16, 'NIK must be 16 characters'),
+  email: z.string().email('Invalid email format'),
+  birth_place: z.string().min(1, 'Birth place is required'),
   groupIds: z.array(z.string().uuid()).optional(),
   birthdate: z.string().optional(),
   phone: z.string().optional(),
@@ -120,6 +123,9 @@ const UpdatePlayer = PlayerSchema;
 export type PlayerState = {
   errors?: {
     name?: string[];
+    nik?: string[];
+    email?: string[];
+    birth_place?: string[];
     groupIds?: string[];
     birthdate?: string[];
     phone?: string[];
@@ -133,6 +139,9 @@ export async function createPlayer(
   formData: FormData,
 ): Promise<PlayerState> {
   const groupIds = formData.getAll('groupIds') as string[];
+  const nikInput = formData.get('nik') as string;
+  const emailInput = formData.get('email') as string;
+  const birthPlaceInput = formData.get('birth_place') as string;
   const birthdate = formData.get('birthdate') as string;
   const phone = formData.get('phone') as string;
   const address = formData.get('address') as string;
@@ -140,6 +149,9 @@ export async function createPlayer(
   
   const validatedFields = CreatePlayer.safeParse({
     name: formData.get('name'),
+    nik: nikInput,
+    email: emailInput,
+    birth_place: birthPlaceInput,
     groupIds: groupIds.length > 0 ? groupIds : undefined,
     birthdate: birthdate || undefined,
     phone: phone || undefined,
@@ -154,13 +166,13 @@ export async function createPlayer(
     };
   }
 
-  const { name, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
+  const { name, nik, email, birth_place, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
 
   try {
     // Insert player and get the new ID
     const result = await sql`
-      INSERT INTO players (name, birthdate, phone, address, is_active)
-      VALUES (${name}, ${bdate || null}, ${ph || null}, ${addr || null}, ${is_active ?? true})
+      INSERT INTO players (name, nik, email, birth_place, birthdate, phone, address, is_active)
+      VALUES (${name}, ${nik}, ${email}, ${birth_place}, ${bdate || null}, ${ph || null}, ${addr || null}, ${is_active ?? true})
       RETURNING id
     `;
     
@@ -190,6 +202,9 @@ export async function updatePlayer(
   formData: FormData,
 ): Promise<PlayerState> {
   const groupIds = formData.getAll('groupIds') as string[];
+  const nikInput = formData.get('nik') as string;
+  const emailInput = formData.get('email') as string;
+  const birthPlaceInput = formData.get('birth_place') as string;
   const birthdate = formData.get('birthdate') as string;
   const phone = formData.get('phone') as string;
   const address = formData.get('address') as string;
@@ -198,6 +213,9 @@ export async function updatePlayer(
   const validatedFields = UpdatePlayer.safeParse({
     id: id,
     name: formData.get('name'),
+    nik: nikInput,
+    email: emailInput,
+    birth_place: birthPlaceInput,
     groupIds: groupIds.length > 0 ? groupIds : undefined,
     birthdate: birthdate || undefined,
     phone: phone || undefined,
@@ -212,13 +230,16 @@ export async function updatePlayer(
     };
   }
 
-  const { name, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
+  const { name, nik, email, birth_place, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
 
   try {
     // Update player
     await sql`
       UPDATE players
-      SET name = ${name}, 
+      SET name = ${name},
+          nik = ${nik},
+          email = ${email},
+          birth_place = ${birth_place},
           birthdate = ${bdate || null},
           phone = ${ph || null},
           address = ${addr || null},

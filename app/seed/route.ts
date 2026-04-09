@@ -54,7 +54,10 @@ async function seedPlayers() {
     CREATE TABLE IF NOT EXISTS players (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
+      nik VARCHAR(36) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
       birthdate DATE,
+      birth_place VARCHAR(255) NOT NULL,
       phone VARCHAR(50),
       address TEXT,
       is_active BOOLEAN DEFAULT true,
