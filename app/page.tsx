@@ -60,14 +60,11 @@ export default function Page() {
           <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
             {/* Left Content */}
             <div className="flex flex-col justify-center">
-              <div className="inline-flex w-fit rounded-full bg-blue-100 px-4 py-1.5 mb-6">
-                <span className="text-sm font-semibold text-blue-600">Est. 2016</span>
-              </div>
               <h1 className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl">
                 Welcome to Tri Dharma
               </h1>
               <p className="mt-6 text-xl text-slate-600">
-                A premier basketball club dedicated to fostering athletic excellence, community spirit, and personal growth through sports and active living.
+                A leading basketball club dedicated to fostering athletic excellence, community spirit, and personal growth through basketball.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
