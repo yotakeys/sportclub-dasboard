@@ -47,7 +47,7 @@ export default function Page() {
             <a href="#contact" className="rounded-lg px-4 py-2 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800">
               Join Us
             </a>
-            <a href="/login" className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">
+            <a href="/login" className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors bg-primary-50 px-4 py-2 rounded-lg">
               Log in
             </a>
           </div>
