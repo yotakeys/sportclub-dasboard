@@ -40,6 +40,7 @@ async function seedGroups() {
     CREATE TABLE IF NOT EXISTS groups (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
+      region VARCHAR(100) NOT NULL DEFAULT 'Surabaya',
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     );
@@ -60,6 +61,7 @@ async function seedPlayers() {
       birth_place VARCHAR(255) NOT NULL,
       phone VARCHAR(50),
       address TEXT,
+      region VARCHAR(100) NOT NULL DEFAULT 'Surabaya',
       is_active BOOLEAN DEFAULT true,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()

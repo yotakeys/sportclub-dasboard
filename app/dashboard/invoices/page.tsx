@@ -5,6 +5,9 @@ import InvoicesTable from '@/app/ui/invoices/table';
 import YearFilter from '@/app/ui/invoices/year-filter';
 import GroupFilter from '@/app/ui/invoices/group-filter';
 import StatusFilter from '@/app/ui/invoices/status-filter';
+import MonthFilter from '@/app/ui/invoices/month-filter';
+import PaymentStatusFilter from '@/app/ui/invoices/payment-status-filter';
+import RegionFilter from '@/app/ui/invoices/region-filter';
 import {
   fetchPlayersWithInvoices,
   fetchInvoicePlayersPages,
@@ -21,21 +24,28 @@ export default async function InvoicesPage({
     query?: string;
     page?: string;
     year?: string;
+    month?: string;
     groupId?: string;
     status?: string;
+    paymentStatus?: string;
+    region?: string;
   };
 }) {
   const query = searchParams?.query || '';
   const currentPage = Number(searchParams?.page) || 1;
   const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
   const year = Number(searchParams?.year) || currentYear;
+  const month = Number(searchParams?.month) || currentMonth;
   const groupId = searchParams?.groupId || undefined;
   const status = searchParams?.status || undefined;
+  const paymentStatus = searchParams?.paymentStatus || undefined;
+  const region = searchParams?.region || 'Surabaya';
 
   const [players, totalPages, groups, years] = await Promise.all([
-    fetchPlayersWithInvoices(query, currentPage, year, groupId, status),
-    fetchInvoicePlayersPages(query, groupId, status),
-    fetchAllGroups(),
+    fetchPlayersWithInvoices(query, currentPage, year, month, groupId, status, paymentStatus, region),
+    fetchInvoicePlayersPages(query, year, month, groupId, status, paymentStatus, region),
+    fetchAllGroups(region),
     fetchAvailableYears(),
   ]);
 
@@ -57,7 +67,17 @@ export default async function InvoicesPage({
         <div className="flex gap-3">
           <div className="w-32">
             <Suspense fallback={null}>
+              <RegionFilter />
+            </Suspense>
+          </div>
+          <div className="w-32">
+            <Suspense fallback={null}>
               <YearFilter years={years} />
+            </Suspense>
+          </div>
+          <div className="w-32">
+            <Suspense fallback={null}>
+              <MonthFilter />
             </Suspense>
           </div>
           <div className="w-40">
@@ -68,6 +88,11 @@ export default async function InvoicesPage({
           <div className="w-32">
             <Suspense fallback={null}>
               <StatusFilter />
+            </Suspense>
+          </div>
+          <div className="w-32">
+            <Suspense fallback={null}>
+              <PaymentStatusFilter />
             </Suspense>
           </div>
         </div>

@@ -30,22 +30,26 @@ export type UpdateGroupPlayerInput = {
 export type Group = {
   id: string;   // UUID
   name: string;
+  region: string;
   created_at?: string;
   updated_at?: string;
 };
 
 export type CreateGroupInput = {
   name: string;
+  region?: string;
 };
 
 export type UpdateGroupInput = {
   id: string;
   name: string;
+  region?: string;
 };
 
 export type GroupFormValues = {
   id?: string;
   name: string;
+  region?: string;
 };
 
 export type InvoiceStatus = "paid";
@@ -80,6 +84,7 @@ export type Player = {
   birth_place: string;
   phone?: string;
   address?: string;
+  region: string;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -93,6 +98,7 @@ export type CreatePlayerInput = {
   birthdate?: string;
   phone?: string;
   address?: string;
+  region?: string;
   is_active?: boolean;
 };
 
@@ -105,6 +111,7 @@ export type UpdatePlayerInput = {
   birthdate?: string;
   phone?: string;
   address?: string;
+  region?: string;
   is_active?: boolean;
 };
 
@@ -117,5 +124,6 @@ export type PlayerFormValues = {
   birthdate?: string;
   phone?: string;
   address?: string;
+  region?: string;
   is_active?: boolean;
 };

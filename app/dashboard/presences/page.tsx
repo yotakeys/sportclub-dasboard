@@ -5,6 +5,7 @@ import PresencesTable from '@/app/ui/presences/table';
 import YearFilter from '@/app/ui/presences/year-filter';
 import GroupFilter from '@/app/ui/presences/group-filter';
 import StatusFilter from '@/app/ui/presences/status-filter';
+import RegionFilter from '@/app/ui/presences/region-filter';
 import {
   fetchPlayersWithPresences,
   fetchPresencePlayersPages,
@@ -23,6 +24,7 @@ export default async function PresencesPage({
     year?: string;
     groupId?: string;
     status?: string;
+    region?: string;
   };
 }) {
   const query = searchParams?.query || '';
@@ -31,11 +33,12 @@ export default async function PresencesPage({
   const year = Number(searchParams?.year) || currentYear;
   const groupId = searchParams?.groupId || undefined;
   const status = searchParams?.status || undefined;
+  const region = searchParams?.region || 'Surabaya';
 
   const [players, totalPages, groups, years] = await Promise.all([
-    fetchPlayersWithPresences(query, currentPage, year, groupId, status),
-    fetchPresencePlayersPages(query, groupId, status),
-    fetchAllGroups(),
+    fetchPlayersWithPresences(query, currentPage, year, groupId, status, region),
+    fetchPresencePlayersPages(query, groupId, status, region),
+    fetchAllGroups(region),
     fetchPresenceAvailableYears(),
   ]);
 
@@ -55,6 +58,11 @@ export default async function PresencesPage({
           <Search placeholder="Search players..." />
         </div>
         <div className="flex gap-3">
+          <div className="w-32">
+            <Suspense fallback={null}>
+              <RegionFilter />
+            </Suspense>
+          </div>
           <div className="w-32">
             <Suspense fallback={null}>
               <YearFilter years={years} />

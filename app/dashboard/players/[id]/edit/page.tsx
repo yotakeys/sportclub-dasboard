@@ -8,12 +8,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function EditPlayerPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams?: {
+    region?: string;
+  };
 }) {
+  const region = searchParams?.region || 'Surabaya';
   const [player, groups] = await Promise.all([
     fetchPlayerById(params.id),
-    fetchAllGroups(),
+    fetchAllGroups(region),
   ]);
 
   if (!player) {
@@ -36,7 +41,7 @@ export default async function EditPlayerPage({
       <p className="mt-2 text-slate-500">Update player information.</p>
 
       <div className="mt-8 max-w-xl">
-        <EditPlayerForm player={player} groups={groups} />
+        <EditPlayerForm player={player} groups={groups} region={region} />
       </div>
     </div>
   );

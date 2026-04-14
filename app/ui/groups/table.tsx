@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Group } from '@/app/lib/definitions';
 import { deleteGroup } from '@/app/lib/action';
 
-export default function GroupsTable({ groups }: { groups: Group[] }) {
+export default function GroupsTable({ groups, region }: { groups: Group[]; region?: string }) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <table className="min-w-full divide-y divide-slate-200">
@@ -32,7 +32,7 @@ export default function GroupsTable({ groups }: { groups: Group[] }) {
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
                   <div className="flex justify-end gap-2">
-                    <UpdateGroup id={group.id} />
+                    <UpdateGroup id={group.id} region={region} />
                     <DeleteGroup id={group.id} />
                   </div>
                 </td>
@@ -45,10 +45,10 @@ export default function GroupsTable({ groups }: { groups: Group[] }) {
   );
 }
 
-function UpdateGroup({ id }: { id: string }) {
+function UpdateGroup({ id, region }: { id: string; region?: string }) {
   return (
     <Link
-      href={`/dashboard/groups/${id}/edit`}
+      href={`/dashboard/groups/${id}/edit?region=${region || 'Surabaya'}`}
       className="rounded-lg border border-slate-200 p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
     >
       <PencilIcon className="h-4 w-4" />

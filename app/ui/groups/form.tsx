@@ -5,9 +5,10 @@ import { Group } from '@/app/lib/definitions';
 import { useFormState } from 'react-dom';
 import Link from 'next/link';
 
-export function CreateGroupForm() {
+export function CreateGroupForm({ region }: { region?: string }) {
   const initialState: GroupState = { message: null, errors: {} };
   const [state, formAction] = useFormState(createGroup, initialState);
+  const selectedRegion = region || 'Surabaya';
 
   return (
     <form action={formAction}>
@@ -38,6 +39,24 @@ export function CreateGroupForm() {
                 ))}
             </div>
           </div>
+
+          {/* Region */}
+          <div>
+            <label
+              htmlFor="region"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Region
+            </label>
+            <div className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600">
+              {selectedRegion}
+            </div>
+            <input
+              type="hidden"
+              name="region"
+              value={selectedRegion}
+            />
+          </div>
         </div>
 
         {state.message && (
@@ -63,10 +82,11 @@ export function CreateGroupForm() {
   );
 }
 
-export function EditGroupForm({ group }: { group: Group }) {
+export function EditGroupForm({ group, region }: { group: Group; region?: string }) {
   const initialState: GroupState = { message: null, errors: {} };
   const updateGroupWithId = updateGroup.bind(null, group.id);
   const [state, formAction] = useFormState(updateGroupWithId, initialState);
+  const selectedRegion = region || 'Surabaya';
 
   return (
     <form action={formAction}>
@@ -97,6 +117,24 @@ export function EditGroupForm({ group }: { group: Group }) {
                   </p>
                 ))}
             </div>
+          </div>
+
+          {/* Region */}
+          <div>
+            <label
+              htmlFor="region"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Region
+            </label>
+            <div className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600">
+              {selectedRegion}
+            </div>
+            <input
+              type="hidden"
+              name="region"
+              value={selectedRegion}
+            />
           </div>
         </div>
 

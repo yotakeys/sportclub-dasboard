@@ -15,6 +15,7 @@ const sql = postgres(process.env.POSTGRES_URL!, {
 const GroupSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, 'Name is required'),
+  region: z.enum(['Surabaya', 'Sidoarjo']).default('Surabaya'),
 });
 
 const CreateGroup = GroupSchema.omit({ id: true });
@@ -23,6 +24,7 @@ const UpdateGroup = GroupSchema;
 export type GroupState = {
   errors?: {
     name?: string[];
+    region?: string[];
   };
   message?: string | null;
 };
@@ -33,6 +35,7 @@ export async function createGroup(
 ): Promise<GroupState> {
   const validatedFields = CreateGroup.safeParse({
     name: formData.get('name'),
+    region: formData.get('region') || 'Surabaya',
   });
 
   if (!validatedFields.success) {
@@ -42,12 +45,12 @@ export async function createGroup(
     };
   }
 
-  const { name } = validatedFields.data;
+  const { name, region } = validatedFields.data;
 
   try {
     await sql`
-      INSERT INTO groups (name)
-      VALUES (${name})
+      INSERT INTO groups (name, region)
+      VALUES (${name}, ${region})
     `;
   } catch (error) {
     console.error('Database Error:', error);
@@ -66,6 +69,7 @@ export async function updateGroup(
   const validatedFields = UpdateGroup.safeParse({
     id: id,
     name: formData.get('name'),
+    region: formData.get('region') || 'Surabaya',
   });
 
   if (!validatedFields.success) {
@@ -75,12 +79,12 @@ export async function updateGroup(
     };
   }
 
-  const { name } = validatedFields.data;
+  const { name, region } = validatedFields.data;
 
   try {
     await sql`
       UPDATE groups
-      SET name = ${name}
+      SET name = ${name}, region = ${region}
       WHERE id = ${id}
     `;
   } catch (error) {
@@ -110,6 +114,7 @@ const PlayerSchema = z.object({
   nik: z.string().length(16, 'NIK must be 16 characters'),
   email: z.string().email('Invalid email format'),
   birth_place: z.string().min(1, 'Birth place is required'),
+  region: z.enum(['Surabaya', 'Sidoarjo']).default('Surabaya'),
   groupIds: z.array(z.string().uuid()).optional(),
   birthdate: z.string().optional(),
   phone: z.string().optional(),
@@ -126,6 +131,7 @@ export type PlayerState = {
     nik?: string[];
     email?: string[];
     birth_place?: string[];
+    region?: string[];
     groupIds?: string[];
     birthdate?: string[];
     phone?: string[];
@@ -142,6 +148,7 @@ export async function createPlayer(
   const nikInput = formData.get('nik') as string;
   const emailInput = formData.get('email') as string;
   const birthPlaceInput = formData.get('birth_place') as string;
+  const regionInput = formData.get('region') as string || 'Surabaya';
   const birthdate = formData.get('birthdate') as string;
   const phone = formData.get('phone') as string;
   const address = formData.get('address') as string;
@@ -152,6 +159,7 @@ export async function createPlayer(
     nik: nikInput,
     email: emailInput,
     birth_place: birthPlaceInput,
+    region: regionInput,
     groupIds: groupIds.length > 0 ? groupIds : undefined,
     birthdate: birthdate || undefined,
     phone: phone || undefined,
@@ -166,13 +174,24 @@ export async function createPlayer(
     };
   }
 
-  const { name, nik, email, birth_place, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
+  const { name, nik, email, birth_place, region, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
 
   try {
+    // Validate groups are in the same region
+    if (validGroupIds && validGroupIds.length > 0) {
+      const groupsData = await sql<{ id: string; region: string }[]>`
+        SELECT id, region FROM groups WHERE id = ANY(${validGroupIds}::uuid[])
+      `;
+      const invalidGroups = groupsData.filter((g) => g.region !== region);
+      if (invalidGroups.length > 0) {
+        return { message: `Failed: Selected groups are not in ${region} region.` };
+      }
+    }
+
     // Insert player and get the new ID
     const result = await sql`
-      INSERT INTO players (name, nik, email, birth_place, birthdate, phone, address, is_active)
-      VALUES (${name}, ${nik}, ${email}, ${birth_place}, ${bdate || null}, ${ph || null}, ${addr || null}, ${is_active ?? true})
+      INSERT INTO players (name, nik, email, birth_place, region, birthdate, phone, address, is_active)
+      VALUES (${name}, ${nik}, ${email}, ${birth_place}, ${region}, ${bdate || null}, ${ph || null}, ${addr || null}, ${is_active ?? true})
       RETURNING id
     `;
     
@@ -205,6 +224,7 @@ export async function updatePlayer(
   const nikInput = formData.get('nik') as string;
   const emailInput = formData.get('email') as string;
   const birthPlaceInput = formData.get('birth_place') as string;
+  const regionInput = formData.get('region') as string || 'Surabaya';
   const birthdate = formData.get('birthdate') as string;
   const phone = formData.get('phone') as string;
   const address = formData.get('address') as string;
@@ -216,6 +236,7 @@ export async function updatePlayer(
     nik: nikInput,
     email: emailInput,
     birth_place: birthPlaceInput,
+    region: regionInput,
     groupIds: groupIds.length > 0 ? groupIds : undefined,
     birthdate: birthdate || undefined,
     phone: phone || undefined,
@@ -230,9 +251,20 @@ export async function updatePlayer(
     };
   }
 
-  const { name, nik, email, birth_place, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
+  const { name, nik, email, birth_place, region, groupIds: validGroupIds, birthdate: bdate, phone: ph, address: addr, is_active } = validatedFields.data;
 
   try {
+    // Validate groups are in the same region
+    if (validGroupIds && validGroupIds.length > 0) {
+      const groupsData = await sql<{ id: string; region: string }[]>`
+        SELECT id, region FROM groups WHERE id = ANY(${validGroupIds}::uuid[])
+      `;
+      const invalidGroups = groupsData.filter((g) => g.region !== region);
+      if (invalidGroups.length > 0) {
+        return { message: `Failed: Selected groups are not in ${region} region.` };
+      }
+    }
+
     // Update player
     await sql`
       UPDATE players
@@ -240,6 +272,7 @@ export async function updatePlayer(
           nik = ${nik},
           email = ${email},
           birth_place = ${birth_place},
+          region = ${region},
           birthdate = ${bdate || null},
           phone = ${ph || null},
           address = ${addr || null},

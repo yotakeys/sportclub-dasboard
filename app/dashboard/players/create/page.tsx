@@ -5,8 +5,15 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CreatePlayerPage() {
-  const groups = await fetchAllGroups();
+export default async function CreatePlayerPage({
+  searchParams,
+}: {
+  searchParams?: {
+    region?: string;
+  };
+}) {
+  const region = searchParams?.region || 'Surabaya';
+  const groups = await fetchAllGroups(region);
 
   return (
     <div>
@@ -24,7 +31,7 @@ export default async function CreatePlayerPage() {
       <p className="mt-2 text-slate-500">Add a new player to the club.</p>
 
       <div className="mt-8 max-w-xl">
-        <CreatePlayerForm groups={groups} />
+        <CreatePlayerForm groups={groups} region={region} />
       </div>
     </div>
   );

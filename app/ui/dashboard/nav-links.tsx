@@ -8,8 +8,9 @@ import {
   CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
+import { useRegionFilter } from '@/app/lib/hooks/useRegionFilter';
 
 const links = [
   { name: 'Home', href: '/dashboard', icon: HomeIcon },
@@ -21,17 +22,34 @@ const links = [
 
 export default function NavLinks() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const queryString = searchParams.toString();
+  const dashboardQueryPrefix = queryString ? `?${queryString}` : '';
+  const { region } = useRegionFilter();
+  const regionQueryPrefix = `?region=${region}`;
 
   return (
     <>
       {links.map((link) => {
         const LinkIcon = link.icon;
         const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+        
+        let href = link.href;
+        if (link.href === '/dashboard') {
+          href = `${link.href}${dashboardQueryPrefix}`;
+        } else if (
+          link.href === '/dashboard/invoices' || 
+          link.href === '/dashboard/presences' ||
+          link.href === '/dashboard/groups' ||
+          link.href === '/dashboard/players'
+        ) {
+          href = `${link.href}${regionQueryPrefix}`;
+        }
 
         return (
           <Link
             key={link.name}
-            href={link.href}
+            href={href}
             className={clsx(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
               {

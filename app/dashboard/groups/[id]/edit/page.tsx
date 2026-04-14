@@ -8,9 +8,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function EditGroupPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams?: {
+    region?: string;
+  };
 }) {
+  const region = searchParams?.region || 'Surabaya';
   const group = await fetchGroupById(params.id);
 
   if (!group) {
@@ -33,7 +38,7 @@ export default async function EditGroupPage({
       <p className="mt-2 text-slate-500">Update group information.</p>
 
       <div className="mt-8 max-w-xl">
-        <EditGroupForm group={group} />
+        <EditGroupForm group={group} region={region} />
       </div>
     </div>
   );

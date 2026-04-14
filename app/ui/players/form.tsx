@@ -6,9 +6,10 @@ import { PlayerWithGroups } from '@/app/lib/data';
 import { useFormState } from 'react-dom';
 import Link from 'next/link';
 
-export function CreatePlayerForm({ groups }: { groups: Group[] }) {
+export function CreatePlayerForm({ groups, region }: { groups: Group[]; region?: string }) {
   const initialState: PlayerState = { message: null, errors: {} };
   const [state, formAction] = useFormState(createPlayer, initialState);
+  const selectedRegion = region || 'Surabaya';
 
   return (
     <form action={formAction}>
@@ -118,6 +119,24 @@ export function CreatePlayerForm({ groups }: { groups: Group[] }) {
                   </p>
                 ))}
             </div>
+          </div>
+
+          {/* Region */}
+          <div>
+            <label
+              htmlFor="region"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Region
+            </label>
+            <div className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600">
+              {selectedRegion}
+            </div>
+            <input
+              type="hidden"
+              name="region"
+              value={selectedRegion}
+            />
           </div>
 
           {/* Birthdate */}
@@ -272,13 +291,16 @@ export function CreatePlayerForm({ groups }: { groups: Group[] }) {
 export function EditPlayerForm({
   player,
   groups,
+  region,
 }: {
   player: PlayerWithGroups;
   groups: Group[];
+  region?: string;
 }) {
   const initialState: PlayerState = { message: null, errors: {} };
   const updatePlayerWithId = updatePlayer.bind(null, player.id);
   const [state, formAction] = useFormState(updatePlayerWithId, initialState);
+  const selectedRegion = region || 'Surabaya';
 
   const playerGroupIds = player.groups.map((g) => g.id);
 
@@ -393,6 +415,24 @@ export function EditPlayerForm({
                   </p>
                 ))}
             </div>
+          </div>
+
+          {/* Region */}
+          <div>
+            <label
+              htmlFor="region"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Region
+            </label>
+            <div className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600">
+              {selectedRegion}
+            </div>
+            <input
+              type="hidden"
+              name="region"
+              value={selectedRegion}
+            />
           </div>
 
           {/* Birthdate */}

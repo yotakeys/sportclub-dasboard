@@ -9,11 +9,13 @@ const ITEMS_PER_PAGE = 10;
 
 // ============ GROUPS ============
 
-export async function fetchAllGroups(): Promise<Group[]> {
+export async function fetchAllGroups(region?: string): Promise<Group[]> {
   try {
+    const selectedRegion = region || 'Surabaya';
     const groups = await sql<Group[]>`
-      SELECT id, name
+      SELECT id, name, region
       FROM groups
+      WHERE region = ${selectedRegion}
       ORDER BY name ASC
     `;
     return groups;
@@ -23,12 +25,14 @@ export async function fetchAllGroups(): Promise<Group[]> {
   }
 }
 
-export async function fetchGroupsPages(query: string): Promise<number> {
+export async function fetchGroupsPages(query: string, region?: string): Promise<number> {
   try {
+    const selectedRegion = region || 'Surabaya';
     const count = await sql`
       SELECT COUNT(*)
       FROM groups
       WHERE name ILIKE ${`%${query}%`}
+      AND region = ${selectedRegion}
     `;
     const totalPages = Math.ceil(Number(count[0].count) / ITEMS_PER_PAGE);
     return totalPages;
@@ -41,14 +45,17 @@ export async function fetchGroupsPages(query: string): Promise<number> {
 export async function fetchFilteredGroups(
   query: string,
   currentPage: number,
+  region?: string,
 ): Promise<Group[]> {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const selectedRegion = region || 'Surabaya';
 
   try {
     const groups = await sql<Group[]>`
-      SELECT id, name
+      SELECT id, name, region
       FROM groups
       WHERE name ILIKE ${`%${query}%`}
+      AND region = ${selectedRegion}
       ORDER BY name ASC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
@@ -62,7 +69,7 @@ export async function fetchFilteredGroups(
 export async function fetchGroupById(id: string): Promise<Group | undefined> {
   try {
     const groups = await sql<Group[]>`
-      SELECT id, name
+      SELECT id, name, region
       FROM groups
       WHERE id = ${id}
     `;
@@ -83,8 +90,10 @@ export async function fetchPlayersPages(
   query: string,
   groupId?: string,
   status?: string,
+  region?: string,
 ): Promise<number> {
   try {
+    const selectedRegion = region || 'Surabaya';
     let count;
     const isActive = status === 'active' ? true : status === 'inactive' ? false : null;
     
@@ -96,6 +105,7 @@ export async function fetchPlayersPages(
         WHERE p.name ILIKE ${`%${query}%`}
         AND gp.group_id = ${groupId}
         AND p.is_active = ${isActive}
+        AND p.region = ${selectedRegion}
       `;
     } else if (groupId) {
       count = await sql`
@@ -104,6 +114,7 @@ export async function fetchPlayersPages(
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE p.name ILIKE ${`%${query}%`}
         AND gp.group_id = ${groupId}
+        AND p.region = ${selectedRegion}
       `;
     } else if (isActive !== null) {
       count = await sql`
@@ -111,12 +122,14 @@ export async function fetchPlayersPages(
         FROM players
         WHERE name ILIKE ${`%${query}%`}
         AND is_active = ${isActive}
+        AND region = ${selectedRegion}
       `;
     } else {
       count = await sql`
         SELECT COUNT(*)
         FROM players
         WHERE name ILIKE ${`%${query}%`}
+        AND region = ${selectedRegion}
       `;
     }
     const totalPages = Math.ceil(Number(count[0].count) / ITEMS_PER_PAGE);
@@ -132,8 +145,10 @@ export async function fetchFilteredPlayers(
   currentPage: number,
   groupId?: string,
   status?: string,
+  region?: string,
 ): Promise<PlayerWithGroups[]> {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const selectedRegion = region || 'Surabaya';
   const isActive = status === 'active' ? true : status === 'inactive' ? false : null;
 
   try {
@@ -141,39 +156,43 @@ export async function fetchFilteredPlayers(
     
     if (groupId && isActive !== null) {
       players = await sql<Player[]>`
-        SELECT DISTINCT p.id, p.name, p.birthdate, p.phone, p.address, p.is_active
+        SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.region, p.is_active, p.created_at, p.updated_at
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE p.name ILIKE ${`%${query}%`}
         AND gp.group_id = ${groupId}
         AND p.is_active = ${isActive}
+        AND p.region = ${selectedRegion}
         ORDER BY p.name ASC
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
       `;
     } else if (groupId) {
       players = await sql<Player[]>`
-        SELECT DISTINCT p.id, p.name, p.birthdate, p.phone, p.address, p.is_active
+        SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.region, p.is_active, p.created_at, p.updated_at
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE p.name ILIKE ${`%${query}%`}
         AND gp.group_id = ${groupId}
+        AND p.region = ${selectedRegion}
         ORDER BY p.name ASC
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
       `;
     } else if (isActive !== null) {
       players = await sql<Player[]>`
-        SELECT id, name, birthdate, phone, address, is_active
+        SELECT id, name, nik, email, birthdate, birth_place, phone, address, region, is_active, created_at, updated_at
         FROM players
         WHERE name ILIKE ${`%${query}%`}
         AND is_active = ${isActive}
+        AND region = ${selectedRegion}
         ORDER BY name ASC
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
       `;
     } else {
       players = await sql<Player[]>`
-        SELECT id, name, birthdate, phone, address, is_active
+        SELECT id, name, nik, email, birthdate, birth_place, phone, address, region, is_active, created_at, updated_at
         FROM players
         WHERE name ILIKE ${`%${query}%`}
+        AND region = ${selectedRegion}
         ORDER BY name ASC
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
       `;
@@ -183,10 +202,11 @@ export async function fetchFilteredPlayers(
     const playersWithGroups: PlayerWithGroups[] = await Promise.all(
       players.map(async (player) => {
         const groups = await sql<Group[]>`
-          SELECT g.id, g.name
+          SELECT g.id, g.name, g.region
           FROM groups g
           INNER JOIN group_players gp ON g.id = gp.group_id
           WHERE gp.player_id = ${player.id}
+          AND g.region = ${selectedRegion}
           ORDER BY g.name ASC
         `;
         return { 
@@ -207,7 +227,7 @@ export async function fetchFilteredPlayers(
 export async function fetchPlayerById(id: string): Promise<PlayerWithGroups | undefined> {
   try {
     const players = await sql<Player[]>`
-      SELECT id, name, TO_CHAR(birthdate, 'YYYY-MM-DD') as birthdate, phone, address, is_active
+      SELECT id, name, nik, email, TO_CHAR(birthdate, 'YYYY-MM-DD') as birthdate, birth_place, phone, address, region, is_active, created_at, updated_at
       FROM players
       WHERE id = ${id}
     `;
@@ -248,43 +268,66 @@ export type PlayerWithInvoices = Player & {
 
 export async function fetchInvoicePlayersPages(
   query: string,
+  year?: number,
+  month?: number,
   groupId?: string,
   status?: string,
+  paymentStatus?: string,
+  region?: string,
 ): Promise<number> {
   try {
     let count;
     const isActive = status === 'active' ? true : status === 'inactive' ? false : null;
+    const queryYear = year || new Date().getFullYear();
+    const queryMonth = month || new Date().getMonth() + 1;
+    const selectedRegion = region || 'Surabaya';
     
-    if (groupId && isActive !== null) {
-      count = await sql`
-        SELECT COUNT(DISTINCT p.id)
-        FROM players p
-        INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE p.name ILIKE ${`%${query}%`}
-        AND gp.group_id = ${groupId}
-        AND p.is_active = ${isActive}
-      `;
-    } else if (groupId) {
-      count = await sql`
-        SELECT COUNT(DISTINCT p.id)
-        FROM players p
-        INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE p.name ILIKE ${`%${query}%`}
-        AND gp.group_id = ${groupId}
-      `;
-    } else if (isActive !== null) {
-      count = await sql`
-        SELECT COUNT(*)
-        FROM players
-        WHERE name ILIKE ${`%${query}%`}
-        AND is_active = ${isActive}
-      `;
+    if (groupId) {
+      if (paymentStatus) {
+        // Need to filter by invoice status
+        count = await sql`
+          SELECT COUNT(DISTINCT p.id)
+          FROM players p
+          INNER JOIN group_players gp ON p.id = gp.player_id
+          LEFT JOIN invoices i ON p.id = i.player_id AND i.year = ${queryYear} AND i.month = ${queryMonth}
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND gp.group_id = ${groupId}
+          AND p.region = ${selectedRegion}
+          ${isActive !== null ? sql`AND p.is_active = ${isActive}` : sql``}
+          ${paymentStatus === 'paid' ? sql`AND i.status = 'paid'` : sql`AND (i.status != 'paid' OR i.id IS NULL)`}
+        `;
+      } else {
+        count = await sql`
+          SELECT COUNT(DISTINCT p.id)
+          FROM players p
+          INNER JOIN group_players gp ON p.id = gp.player_id
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND gp.group_id = ${groupId}
+          AND p.region = ${selectedRegion}
+          ${isActive !== null ? sql`AND p.is_active = ${isActive}` : sql``}
+        `;
+      }
     } else {
-      count = await sql`
-        SELECT COUNT(*)
-        FROM players
-        WHERE name ILIKE ${`%${query}%`}
-      `;
+      if (paymentStatus) {
+        // Need to filter by invoice status
+        count = await sql`
+          SELECT COUNT(DISTINCT p.id)
+          FROM players p
+          LEFT JOIN invoices i ON p.id = i.player_id AND i.year = ${queryYear} AND i.month = ${queryMonth}
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND p.region = ${selectedRegion}
+          ${isActive !== null ? sql`AND p.is_active = ${isActive}` : sql``}
+          ${paymentStatus === 'paid' ? sql`AND i.status = 'paid'` : sql`AND (i.status != 'paid' OR i.id IS NULL)`}
+        `;
+      } else {
+        count = await sql`
+          SELECT COUNT(*)
+          FROM players
+          WHERE name ILIKE ${`%${query}%`}
+          AND region = ${selectedRegion}
+          ${isActive !== null ? sql`AND is_active = ${isActive}` : sql``}
+        `;
+      }
     }
     const totalPages = Math.ceil(Number(count[0].count) / ITEMS_PER_PAGE);
     return totalPages;
@@ -298,53 +341,120 @@ export async function fetchPlayersWithInvoices(
   query: string,
   currentPage: number,
   year: number,
+  month: number,
   groupId?: string,
   status?: string,
+  paymentStatus?: string,
+  region?: string,
 ): Promise<PlayerWithInvoices[]> {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
   const isActive = status === 'active' ? true : status === 'inactive' ? false : null;
+  const selectedRegion = region || 'Surabaya';
 
   try {
     let players: Player[];
     
-    if (groupId && isActive !== null) {
-      players = await sql<Player[]>`
-        SELECT DISTINCT p.id, p.name
-        FROM players p
-        INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE p.name ILIKE ${`%${query}%`}
-        AND gp.group_id = ${groupId}
-        AND p.is_active = ${isActive}
-        ORDER BY p.name ASC
-        LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-      `;
-    } else if (groupId) {
-      players = await sql<Player[]>`
-        SELECT DISTINCT p.id, p.name
-        FROM players p
-        INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE p.name ILIKE ${`%${query}%`}
-        AND gp.group_id = ${groupId}
-        ORDER BY p.name ASC
-        LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-      `;
-    } else if (isActive !== null) {
-      players = await sql<Player[]>`
-        SELECT id, name
-        FROM players
-        WHERE name ILIKE ${`%${query}%`}
-        AND is_active = ${isActive}
-        ORDER BY name ASC
-        LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-      `;
+    // Determine if we need to filter by payment status
+    const hasPaymentFilter = paymentStatus === 'paid' || paymentStatus === 'unpaid';
+    
+    if (hasPaymentFilter) {
+      // Complex query with LEFT JOIN to invoices for payment status filtering
+      if (groupId && isActive !== null) {
+        players = await sql<Player[]>`
+          SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.is_active, p.created_at, p.updated_at
+          FROM players p
+          INNER JOIN group_players gp ON p.id = gp.player_id
+          LEFT JOIN invoices i ON p.id = i.player_id AND i.year = ${year} AND i.month = ${month}
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND gp.group_id = ${groupId}
+          AND p.region = ${selectedRegion}
+          AND p.is_active = ${isActive}
+          ${paymentStatus === 'paid' ? sql`AND i.status = 'paid'` : sql`AND (i.status != 'paid' OR i.id IS NULL)`}
+          ORDER BY p.name ASC
+          LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        `;
+      } else if (groupId) {
+        players = await sql<Player[]>`
+          SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.is_active, p.created_at, p.updated_at
+          FROM players p
+          INNER JOIN group_players gp ON p.id = gp.player_id
+          LEFT JOIN invoices i ON p.id = i.player_id AND i.year = ${year} AND i.month = ${month}
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND gp.group_id = ${groupId}
+          AND p.region = ${selectedRegion}
+          ${paymentStatus === 'paid' ? sql`AND i.status = 'paid'` : sql`AND (i.status != 'paid' OR i.id IS NULL)`}
+          ORDER BY p.name ASC
+          LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        `;
+      } else if (isActive !== null) {
+        players = await sql<Player[]>`
+          SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.is_active, p.created_at, p.updated_at
+          FROM players p
+          LEFT JOIN invoices i ON p.id = i.player_id AND i.year = ${year} AND i.month = ${month}
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND p.region = ${selectedRegion}
+          AND p.is_active = ${isActive}
+          ${paymentStatus === 'paid' ? sql`AND i.status = 'paid'` : sql`AND (i.status != 'paid' OR i.id IS NULL)`}
+          ORDER BY p.name ASC
+          LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        `;
+      } else {
+        players = await sql<Player[]>`
+          SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.is_active, p.created_at, p.updated_at
+          FROM players p
+          LEFT JOIN invoices i ON p.id = i.player_id AND i.year = ${year} AND i.month = ${month}
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND p.region = ${selectedRegion}
+          ${paymentStatus === 'paid' ? sql`AND i.status = 'paid'` : sql`AND (i.status != 'paid' OR i.id IS NULL)`}
+          ORDER BY p.name ASC
+          LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        `;
+      }
     } else {
-      players = await sql<Player[]>`
-        SELECT id, name
-        FROM players
-        WHERE name ILIKE ${`%${query}%`}
-        ORDER BY name ASC
-        LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-      `;
+      // Original simpler query without payment filter
+      if (groupId && isActive !== null) {
+        players = await sql<Player[]>`
+          SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.is_active, p.created_at, p.updated_at
+          FROM players p
+          INNER JOIN group_players gp ON p.id = gp.player_id
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND gp.group_id = ${groupId}
+          AND p.region = ${selectedRegion}
+          AND p.is_active = ${isActive}
+          ORDER BY p.name ASC
+          LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        `;
+      } else if (groupId) {
+        players = await sql<Player[]>`
+          SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.is_active, p.created_at, p.updated_at
+          FROM players p
+          INNER JOIN group_players gp ON p.id = gp.player_id
+          WHERE p.name ILIKE ${`%${query}%`}
+          AND gp.group_id = ${groupId}
+          AND p.region = ${selectedRegion}
+          ORDER BY p.name ASC
+          LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        `;
+      } else if (isActive !== null) {
+        players = await sql<Player[]>`
+          SELECT id, name, nik, email, birthdate, birth_place, phone, address, is_active, created_at, updated_at
+          FROM players
+          WHERE name ILIKE ${`%${query}%`}
+          AND region = ${selectedRegion}
+          AND is_active = ${isActive}
+          ORDER BY name ASC
+          LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        `;
+      } else {
+        players = await sql<Player[]>`
+          SELECT id, name, nik, email, birthdate, birth_place, phone, address, is_active, created_at, updated_at
+          FROM players
+          WHERE name ILIKE ${`%${query}%`}
+          AND region = ${selectedRegion}
+          ORDER BY name ASC
+          LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        `;
+      }
     }
 
     // Fetch invoices for each player for the given year
@@ -355,14 +465,15 @@ export async function fetchPlayersWithInvoices(
           FROM invoices
           WHERE player_id = ${player.id}
           AND year = ${year}
+          ORDER BY month ASC
         `;
 
         // Create array for all 12 months
         const monthlyInvoices: MonthlyInvoice[] = Array.from({ length: 12 }, (_, i) => {
-          const month = i + 1;
-          const invoice = invoices.find((inv) => inv.month === month);
+          const m = i + 1;
+          const invoice = invoices.find((inv) => inv.month === m);
           return {
-            month,
+            month: m,
             status: invoice?.status === 'paid' ? 'paid' : null,
             invoiceId: invoice?.id || null,
             amount: invoice?.amount || 0,
@@ -420,10 +531,12 @@ export async function fetchPresencePlayersPages(
   query: string,
   groupId?: string,
   status?: string,
+  region?: string,
 ): Promise<number> {
   try {
     let count;
     const isActive = status === 'active' ? true : status === 'inactive' ? false : null;
+    const selectedRegion = region || 'Surabaya';
     
     if (groupId && isActive !== null) {
       count = await sql`
@@ -432,6 +545,7 @@ export async function fetchPresencePlayersPages(
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE p.name ILIKE ${`%${query}%`}
         AND gp.group_id = ${groupId}
+        AND p.region = ${selectedRegion}
         AND p.is_active = ${isActive}
       `;
     } else if (groupId) {
@@ -441,12 +555,14 @@ export async function fetchPresencePlayersPages(
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE p.name ILIKE ${`%${query}%`}
         AND gp.group_id = ${groupId}
+        AND p.region = ${selectedRegion}
       `;
     } else if (isActive !== null) {
       count = await sql`
         SELECT COUNT(*)
         FROM players
         WHERE name ILIKE ${`%${query}%`}
+        AND region = ${selectedRegion}
         AND is_active = ${isActive}
       `;
     } else {
@@ -454,6 +570,7 @@ export async function fetchPresencePlayersPages(
         SELECT COUNT(*)
         FROM players
         WHERE name ILIKE ${`%${query}%`}
+        AND region = ${selectedRegion}
       `;
     }
     const totalPages = Math.ceil(Number(count[0].count) / ITEMS_PER_PAGE);
@@ -470,48 +587,54 @@ export async function fetchPlayersWithPresences(
   year: number,
   groupId?: string,
   status?: string,
+  region?: string,
 ): Promise<PlayerWithPresences[]> {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
   const isActive = status === 'active' ? true : status === 'inactive' ? false : null;
+  const selectedRegion = region || 'Surabaya';
 
   try {
     let players: Player[];
     
     if (groupId && isActive !== null) {
       players = await sql<Player[]>`
-        SELECT DISTINCT p.id, p.name
+        SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.is_active, p.created_at, p.updated_at
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE p.name ILIKE ${`%${query}%`}
         AND gp.group_id = ${groupId}
+        AND p.region = ${selectedRegion}
         AND p.is_active = ${isActive}
         ORDER BY p.name ASC
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
       `;
     } else if (groupId) {
       players = await sql<Player[]>`
-        SELECT DISTINCT p.id, p.name
+        SELECT DISTINCT p.id, p.name, p.nik, p.email, p.birthdate, p.birth_place, p.phone, p.address, p.is_active, p.created_at, p.updated_at
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE p.name ILIKE ${`%${query}%`}
         AND gp.group_id = ${groupId}
+        AND p.region = ${selectedRegion}
         ORDER BY p.name ASC
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
       `;
     } else if (isActive !== null) {
       players = await sql<Player[]>`
-        SELECT id, name
+        SELECT id, name, nik, email, birthdate, birth_place, phone, address, is_active, created_at, updated_at
         FROM players
         WHERE name ILIKE ${`%${query}%`}
+        AND region = ${selectedRegion}
         AND is_active = ${isActive}
         ORDER BY name ASC
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
       `;
     } else {
       players = await sql<Player[]>`
-        SELECT id, name
+        SELECT id, name, nik, email, birthdate, birth_place, phone, address, is_active, created_at, updated_at
         FROM players
         WHERE name ILIKE ${`%${query}%`}
+        AND region = ${selectedRegion}
         ORDER BY name ASC
         LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
       `;
@@ -591,12 +714,14 @@ export async function fetchDashboardStats(
   year?: number,
   month?: number,
   groupId?: string,
+  region?: string,
 ): Promise<DashboardStats> {
   const filterYear = year || new Date().getFullYear();
   const filterMonth = month || new Date().getMonth() + 1;
+  const selectedRegion = region || 'Surabaya';
   
   try {
-    // Total players (filtered by group if provided)
+    // Total players (filtered by group and region if provided)
     let playersCount;
     let activePlayersCount;
     let inactivePlayersCount;
@@ -607,27 +732,28 @@ export async function fetchDashboardStats(
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE gp.group_id = ${groupId}
+        AND p.region = ${selectedRegion}
       `;
       activePlayersCount = await sql`
         SELECT COUNT(DISTINCT p.id) as count
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE gp.group_id = ${groupId} AND p.is_active = true
+        WHERE gp.group_id = ${groupId} AND p.is_active = true AND p.region = ${selectedRegion}
       `;
       inactivePlayersCount = await sql`
         SELECT COUNT(DISTINCT p.id) as count
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE gp.group_id = ${groupId} AND p.is_active = false
+        WHERE gp.group_id = ${groupId} AND p.is_active = false AND p.region = ${selectedRegion}
       `;
     } else {
-      playersCount = await sql`SELECT COUNT(*) as count FROM players`;
-      activePlayersCount = await sql`SELECT COUNT(*) as count FROM players WHERE is_active = true`;
-      inactivePlayersCount = await sql`SELECT COUNT(*) as count FROM players WHERE is_active = false`;
+      playersCount = await sql`SELECT COUNT(*) as count FROM players WHERE region = ${selectedRegion}`;
+      activePlayersCount = await sql`SELECT COUNT(*) as count FROM players WHERE is_active = true AND region = ${selectedRegion}`;
+      inactivePlayersCount = await sql`SELECT COUNT(*) as count FROM players WHERE is_active = false AND region = ${selectedRegion}`;
     }
 
     // Total groups
-    const groupsCount = await sql`SELECT COUNT(*) as count FROM groups`;
+    const groupsCount = await sql`SELECT COUNT(*) as count FROM groups WHERE region = ${selectedRegion}`;
 
     // Total income with filters
     let incomeQuery;
@@ -637,12 +763,13 @@ export async function fetchDashboardStats(
         FROM invoices i
         INNER JOIN players p ON i.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE i.year = ${year} AND i.month = ${month} AND gp.group_id = ${groupId} AND i.status = 'paid'
+        WHERE i.year = ${year} AND i.month = ${month} AND gp.group_id = ${groupId} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else if (year && month) {
       incomeQuery = await sql`
-        SELECT COALESCE(SUM(amount), 0) as total FROM invoices
-        WHERE year = ${year} AND month = ${month} AND status = 'paid'
+        SELECT COALESCE(SUM(i.amount), 0) as total FROM invoices i
+        INNER JOIN players p ON i.player_id = p.id
+        WHERE i.year = ${year} AND i.month = ${month} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else if (year && groupId) {
       incomeQuery = await sql`
@@ -650,11 +777,13 @@ export async function fetchDashboardStats(
         FROM invoices i
         INNER JOIN players p ON i.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE i.year = ${year} AND gp.group_id = ${groupId} AND i.status = 'paid'
+        WHERE i.year = ${year} AND gp.group_id = ${groupId} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else if (year) {
       incomeQuery = await sql`
-        SELECT COALESCE(SUM(amount), 0) as total FROM invoices WHERE year = ${year} AND status = 'paid'
+        SELECT COALESCE(SUM(i.amount), 0) as total FROM invoices i
+        INNER JOIN players p ON i.player_id = p.id
+        WHERE i.year = ${year} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else if (groupId) {
       incomeQuery = await sql`
@@ -662,10 +791,14 @@ export async function fetchDashboardStats(
         FROM invoices i
         INNER JOIN players p ON i.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE gp.group_id = ${groupId} AND i.status = 'paid'
+        WHERE gp.group_id = ${groupId} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else {
-      incomeQuery = await sql`SELECT COALESCE(SUM(amount), 0) as total FROM invoices WHERE status = 'paid'`;
+      incomeQuery = await sql`
+        SELECT COALESCE(SUM(i.amount), 0) as total FROM invoices i
+        INNER JOIN players p ON i.player_id = p.id
+        WHERE i.status = 'paid' AND p.region = ${selectedRegion}
+      `;
     }
 
     // Total presences with filters (year, month, groupId)
@@ -676,11 +809,13 @@ export async function fetchDashboardStats(
         FROM presences pr
         INNER JOIN players p ON pr.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE pr.year = ${year} AND pr.month = ${month} AND gp.group_id = ${groupId}
+        WHERE pr.year = ${year} AND pr.month = ${month} AND gp.group_id = ${groupId} AND p.region = ${selectedRegion}
       `;
     } else if (year && month) {
       presencesCount = await sql`
-        SELECT COALESCE(SUM(count), 0) as total FROM presences WHERE year = ${year} AND month = ${month}
+        SELECT COALESCE(SUM(pr.count), 0) as total FROM presences pr
+        INNER JOIN players p ON pr.player_id = p.id
+        WHERE pr.year = ${year} AND pr.month = ${month} AND p.region = ${selectedRegion}
       `;
     } else if (year && groupId) {
       presencesCount = await sql`
@@ -688,11 +823,13 @@ export async function fetchDashboardStats(
         FROM presences pr
         INNER JOIN players p ON pr.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE pr.year = ${year} AND gp.group_id = ${groupId}
+        WHERE pr.year = ${year} AND gp.group_id = ${groupId} AND p.region = ${selectedRegion}
       `;
     } else if (year) {
       presencesCount = await sql`
-        SELECT COALESCE(SUM(count), 0) as total FROM presences WHERE year = ${year}
+        SELECT COALESCE(SUM(pr.count), 0) as total FROM presences pr
+        INNER JOIN players p ON pr.player_id = p.id
+        WHERE pr.year = ${year} AND p.region = ${selectedRegion}
       `;
     } else if (groupId) {
       presencesCount = await sql`
@@ -700,10 +837,14 @@ export async function fetchDashboardStats(
         FROM presences pr
         INNER JOIN players p ON pr.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE gp.group_id = ${groupId}
+        WHERE gp.group_id = ${groupId} AND p.region = ${selectedRegion}
       `;
     } else {
-      presencesCount = await sql`SELECT COALESCE(SUM(count), 0) as total FROM presences`;
+      presencesCount = await sql`
+        SELECT COALESCE(SUM(pr.count), 0) as total FROM presences pr
+        INNER JOIN players p ON pr.player_id = p.id
+        WHERE p.region = ${selectedRegion}
+      `;
     }
 
     // Paid invoices count with filters
@@ -714,11 +855,13 @@ export async function fetchDashboardStats(
         FROM invoices i
         INNER JOIN players p ON i.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE i.year = ${year} AND i.month = ${month} AND gp.group_id = ${groupId} AND i.status = 'paid'
+        WHERE i.year = ${year} AND i.month = ${month} AND gp.group_id = ${groupId} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else if (year && month) {
       paidCount = await sql`
-        SELECT COUNT(*) as count FROM invoices WHERE year = ${year} AND month = ${month} AND status = 'paid'
+        SELECT COUNT(*) as count FROM invoices i
+        INNER JOIN players p ON i.player_id = p.id
+        WHERE i.year = ${year} AND i.month = ${month} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else if (year && groupId) {
       paidCount = await sql`
@@ -726,11 +869,13 @@ export async function fetchDashboardStats(
         FROM invoices i
         INNER JOIN players p ON i.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE i.year = ${year} AND gp.group_id = ${groupId} AND i.status = 'paid'
+        WHERE i.year = ${year} AND gp.group_id = ${groupId} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else if (year) {
       paidCount = await sql`
-        SELECT COUNT(*) as count FROM invoices WHERE year = ${year} AND status = 'paid'
+        SELECT COUNT(*) as count FROM invoices i
+        INNER JOIN players p ON i.player_id = p.id
+        WHERE i.year = ${year} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else if (groupId) {
       paidCount = await sql`
@@ -738,10 +883,14 @@ export async function fetchDashboardStats(
         FROM invoices i
         INNER JOIN players p ON i.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE gp.group_id = ${groupId} AND i.status = 'paid'
+        WHERE gp.group_id = ${groupId} AND i.status = 'paid' AND p.region = ${selectedRegion}
       `;
     } else {
-      paidCount = await sql`SELECT COUNT(*) as count FROM invoices WHERE status = 'paid'`;
+      paidCount = await sql`
+        SELECT COUNT(*) as count FROM invoices i
+        INNER JOIN players p ON i.player_id = p.id
+        WHERE i.status = 'paid' AND p.region = ${selectedRegion}
+      `;
     }
 
     // Players who haven't paid (uses filter year/month, or current if not specified)
@@ -753,6 +902,7 @@ export async function fetchDashboardStats(
         INNER JOIN group_players gp ON p.id = gp.player_id
         WHERE p.is_active = true
         AND gp.group_id = ${groupId}
+        AND p.region = ${selectedRegion}
         AND NOT EXISTS (
           SELECT 1 FROM invoices i 
           WHERE i.player_id = p.id 
@@ -766,6 +916,7 @@ export async function fetchDashboardStats(
         SELECT COUNT(DISTINCT p.id) as count
         FROM players p
         WHERE p.is_active = true
+        AND p.region = ${selectedRegion}
         AND NOT EXISTS (
           SELECT 1 FROM invoices i 
           WHERE i.player_id = p.id 
@@ -776,23 +927,23 @@ export async function fetchDashboardStats(
       `;
     }
 
-    // Recent players (filtered by group if provided)
+    // Recent players (filtered by group and region)
     let recentPlayers;
     if (groupId) {
       recentPlayers = await sql<{ id: string; name: string; created_at: string }[]>`
         SELECT p.id, p.name, p.created_at 
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE gp.group_id = ${groupId}
+        WHERE gp.group_id = ${groupId} AND p.region = ${selectedRegion}
         ORDER BY p.created_at DESC LIMIT 5
       `;
     } else {
       recentPlayers = await sql<{ id: string; name: string; created_at: string }[]>`
-        SELECT id, name, created_at FROM players ORDER BY created_at DESC LIMIT 5
+        SELECT id, name, created_at FROM players WHERE region = ${selectedRegion} ORDER BY created_at DESC LIMIT 5
       `;
     }
 
-    // Top attendance with filters (year, month, groupId)
+    // Top attendance with filters (year, month, groupId, region)
     let topAttendance;
     if (year && month && groupId) {
       topAttendance = await sql<{ id: string; name: string; total: number }[]>`
@@ -800,7 +951,7 @@ export async function fetchDashboardStats(
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
         LEFT JOIN presences pr ON p.id = pr.player_id AND pr.year = ${year} AND pr.month = ${month}
-        WHERE p.is_active = true AND gp.group_id = ${groupId}
+        WHERE p.is_active = true AND gp.group_id = ${groupId} AND p.region = ${selectedRegion}
         GROUP BY p.id, p.name
         ORDER BY total DESC
         LIMIT 5
@@ -810,7 +961,7 @@ export async function fetchDashboardStats(
         SELECT p.id, p.name, COALESCE(SUM(pr.count), 0) as total
         FROM players p
         LEFT JOIN presences pr ON p.id = pr.player_id AND pr.year = ${year} AND pr.month = ${month}
-        WHERE p.is_active = true
+        WHERE p.is_active = true AND p.region = ${selectedRegion}
         GROUP BY p.id, p.name
         ORDER BY total DESC
         LIMIT 5
@@ -821,7 +972,7 @@ export async function fetchDashboardStats(
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
         LEFT JOIN presences pr ON p.id = pr.player_id AND pr.year = ${year}
-        WHERE p.is_active = true AND gp.group_id = ${groupId}
+        WHERE p.is_active = true AND gp.group_id = ${groupId} AND p.region = ${selectedRegion}
         GROUP BY p.id, p.name
         ORDER BY total DESC
         LIMIT 5
@@ -831,7 +982,7 @@ export async function fetchDashboardStats(
         SELECT p.id, p.name, COALESCE(SUM(pr.count), 0) as total
         FROM players p
         LEFT JOIN presences pr ON p.id = pr.player_id AND pr.year = ${year}
-        WHERE p.is_active = true
+        WHERE p.is_active = true AND p.region = ${selectedRegion}
         GROUP BY p.id, p.name
         ORDER BY total DESC
         LIMIT 5
@@ -842,7 +993,7 @@ export async function fetchDashboardStats(
         FROM players p
         INNER JOIN group_players gp ON p.id = gp.player_id
         LEFT JOIN presences pr ON p.id = pr.player_id
-        WHERE p.is_active = true AND gp.group_id = ${groupId}
+        WHERE p.is_active = true AND gp.group_id = ${groupId} AND p.region = ${selectedRegion}
         GROUP BY p.id, p.name
         ORDER BY total DESC
         LIMIT 5
@@ -852,14 +1003,14 @@ export async function fetchDashboardStats(
         SELECT p.id, p.name, COALESCE(SUM(pr.count), 0) as total
         FROM players p
         LEFT JOIN presences pr ON p.id = pr.player_id
-        WHERE p.is_active = true
+        WHERE p.is_active = true AND p.region = ${selectedRegion}
         GROUP BY p.id, p.name
         ORDER BY total DESC
         LIMIT 5
       `;
     }
 
-    // Monthly income for selected year (with group filter if provided)
+    // Monthly income for selected year (with group filter and region)
     let monthlyIncome;
     if (groupId) {
       monthlyIncome = await sql<{ month: number; total: number }[]>`
@@ -867,17 +1018,18 @@ export async function fetchDashboardStats(
         FROM invoices i
         INNER JOIN players p ON i.player_id = p.id
         INNER JOIN group_players gp ON p.id = gp.player_id
-        WHERE i.year = ${filterYear} AND i.status = 'paid' AND gp.group_id = ${groupId}
+        WHERE i.year = ${filterYear} AND i.status = 'paid' AND gp.group_id = ${groupId} AND p.region = ${selectedRegion}
         GROUP BY i.month
         ORDER BY i.month
       `;
     } else {
       monthlyIncome = await sql<{ month: number; total: number }[]>`
-        SELECT month, COALESCE(SUM(amount), 0) as total
-        FROM invoices
-        WHERE year = ${filterYear} AND status = 'paid'
-        GROUP BY month
-        ORDER BY month
+        SELECT i.month, COALESCE(SUM(i.amount), 0) as total
+        FROM invoices i
+        INNER JOIN players p ON i.player_id = p.id
+        WHERE i.year = ${filterYear} AND i.status = 'paid' AND p.region = ${selectedRegion}
+        GROUP BY i.month
+        ORDER BY i.month
       `;
     }
 
